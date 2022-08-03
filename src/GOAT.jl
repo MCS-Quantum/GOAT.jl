@@ -13,9 +13,6 @@ export window, S, general_logistic, dSdx, LO, gaussian_kernel, fourier_ansatz, d
 include("Utilities.jl")
 export make_fock_projector, direct_sum, make_operator_basis, sparse_direct_sum, isunitary, save_opt_results, embed_square_matrix, Givens_rmul!, Givens_SUn!, SUnSUn!, embed_A_into_B!, create_initial_vector_U_∂U, create_initial_vector_U, unpack_u_∂u, unpack_u, unpack_us_∂us
 
-include("Analysis.jl")
-export get_freqs_fft, get_periodogram
-
 
 function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func)
     d = size(u,2) # Dimension of unitary/Hamiltonian
