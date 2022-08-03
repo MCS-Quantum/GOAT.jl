@@ -254,7 +254,7 @@ end
 """
 Partial deriv of c_func w.r.t the lth element of p
 """
-function gaussian_coefficient(p,t,i,l,K::Int64,N::Int64)
+function ∂gaussian_coefficient(p,t,i,l,K::Int64,N::Int64)
     jmin = (i-1)*K*N+1
     jmax = i*K*N
     if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms
