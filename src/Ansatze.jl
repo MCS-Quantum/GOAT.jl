@@ -208,7 +208,7 @@ function derivative_morlet_ansatz(t,p,k,n,q)
 end
 
 
-function fourier_coefficient(p,t,i)
+function fourier_coefficient(p,t,i,K::Int64,N::Int64)
     c = 0.0
     for n in 1:N
         j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
@@ -221,7 +221,7 @@ end
 """
 Partial deriv of c_func w.r.t the lth element of p
 """
-function ∂fourier_coefficient(p,t,i,l)
+function ∂fourier_coefficient(p,t,i,l,K::Int64,N::Int64)
     jmin = (i-1)*K*N+1
     jmax = i*K*N
     if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms
@@ -241,7 +241,7 @@ function ∂fourier_coefficient(p,t,i,l)
     return 0.0
 end
 
-function gaussian_coefficient(p,t,i)
+function gaussian_coefficient(p,t,i,K::Int64,N::Int64)
     c = 0.0
     for n in 1:N
         j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
@@ -254,7 +254,7 @@ end
 """
 Partial deriv of c_func w.r.t the lth element of p
 """
-function gaussian_coefficient(p,t,i,l)
+function gaussian_coefficient(p,t,i,l,K::Int64,N::Int64)
     jmin = (i-1)*K*N+1
     jmax = i*K*N
     if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms

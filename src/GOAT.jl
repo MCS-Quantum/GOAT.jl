@@ -170,7 +170,7 @@ struct ControllableSystem{T,F}
     dim::Int64
 end
 
-function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func, param_vector; rotating_frame_generator=nothing)
+function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func; rotating_frame_generator=nothing)
     d_ls,d_ms,d_vs = findnz(drift_op)
     d = size(drift_op,1)
     c_ls = [findnz(op)[1] for op in basis_ops]
