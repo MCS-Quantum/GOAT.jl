@@ -17,9 +17,6 @@ include("Analysis.jl")
 export get_freqs_fft, get_periodogram
 
 
-
-
-
 function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)

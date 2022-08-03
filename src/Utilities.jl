@@ -1,26 +1,4 @@
-using QuantumOptics, JLD2
-
-function save_opt_results(savedir,filename,optim_results_array,Tc,Ns,Qs,leakage_weight,U,v,q; overwrite=false)
-    filepath = joinpath(savedir,filename)
-    file_doesnt_exist = filename ∉ readdir(savedir)
-    if overwrite || file_doesnt_exist
-        jldopen(filepath, "w") do file
-            file["Problem_specs/Tc"] = Tc
-            file["Problem_specs/Ns"] = Ns
-            file["Problem_specs/Qs"] = Qs
-            file["Problem_specs/leakage_weight"] = leakage_weight
-            file["Problem_specs/U"] = U
-            file["Problem_specs/v"] = v
-            file["Problem_specs/q"] = q
-            for (i,result) in enumerate(optim_results_array)
-                file["Optim_results/$i"] = result
-            end
-        end
-        println("Results saved at $filepath")
-    else
-        println("File exists. Not saving anything.")
-    end
-end
+using QuantumOptics
 
 
 function make_fock_projector(basis,levels)
