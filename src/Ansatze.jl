@@ -206,3 +206,70 @@ function derivative_morlet_ansatz(t,p,k,n,q)
         return c
     end
 end
+
+
+function fourier_coefficient(p,t,i)
+    c = 0.0
+    for n in 1:N
+        j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
+        c += p[j+1]*sin(p[j+2]*t+p[j+3])
+    end
+    return c
+end
+
+
+"""
+Partial deriv of c_func w.r.t the lth element of p
+"""
+function ∂fourier_coefficient(p,t,i,l)
+    jmin = (i-1)*K*N+1
+    jmax = i*K*N
+    if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms
+        c = 0.0
+        for n in 1:N
+            j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
+            if j+1 == l
+                c += sin(p[j+2]*t+p[j+3])
+            elseif j+2 == l
+                c += t*p[j+1]*cos(p[j+2]*t+p[j+3])
+            elseif j+3 == l
+                c += p[j+1]*cos(p[j+2]*t+p[j+3])
+            end
+        end
+        return c
+    end
+    return 0.0
+end
+
+function gaussian_coefficient(p,t,i)
+    c = 0.0
+    for n in 1:N
+        j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
+        c += p[j+1]*exp(-0.5*( (t-p[j+2]) / p[j+3])^2)
+    end
+    return c
+end
+
+
+"""
+Partial deriv of c_func w.r.t the lth element of p
+"""
+function gaussian_coefficient(p,t,i,l)
+    jmin = (i-1)*K*N+1
+    jmax = i*K*N
+    if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms
+        c = 0.0
+        for n in 1:N
+            j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
+            if j+1 == l
+                c += exp(-0.5*( (t-p[j+2]) / p[j+3])^2)
+            elseif j+2 == l
+                c += p[j+1]*(t-p[j+2]])*exp(-0.5*( (t-p[j+2]) / p[j+3])^2) /(p[j+3]^2)
+            elseif j+3 == l
+                c += p[j+1]*((t-p[j+2])^2)*exp(-0.5*( (t-p[j+2]) / p[j+3])^2)/(p[j+3]^3)
+            end
+        end
+        return c
+    end
+    return 0.0
+end
