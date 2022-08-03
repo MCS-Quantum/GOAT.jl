@@ -264,7 +264,7 @@ function gaussian_coefficient(p,t,i,l)
             if j+1 == l
                 c += exp(-0.5*( (t-p[j+2]) / p[j+3])^2)
             elseif j+2 == l
-                c += p[j+1]*(t-p[j+2]])*exp(-0.5*( (t-p[j+2]) / p[j+3])^2) /(p[j+3]^2)
+                c += p[j+1]*(t-p[j+2])*exp(-0.5*( (t-p[j+2]) / p[j+3])^2) /(p[j+3]^2)
             elseif j+3 == l
                 c += p[j+1]*((t-p[j+2])^2)*exp(-0.5*( (t-p[j+2]) / p[j+3])^2)/(p[j+3]^3)
             end
