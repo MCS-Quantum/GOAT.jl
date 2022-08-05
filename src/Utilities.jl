@@ -250,3 +250,41 @@ function unpack_us_∂us(us; block_inds=nothing, linear_u_index_from_pair=nothin
     ∂us = [sparse(row_inds,col_inds,vals_∂u) for vals_∂u in vals_∂us]
     return us, ∂us
 end
+
+"""
+Compute the sinusoidal amplitude-phase coefficients and frequencies from FFT of the signal s with timeseries ts. 
+"""
+function get_sinusoidal_coefficients_from_FFT(ts, s)
+    P = ts[end]
+    dt = ts[2]-ts[1]
+    fs = 1/dt
+    N = size(ts,1)
+    Fs = fft(s)[1:N÷2]
+    freqs = fftfreq(length(s),fs)
+    ak = (2/N)*real.(Fs)
+    bk = (-2/N)*imag.(Fs)
+    ak[1] = ak[1]/2
+    phi_k = atan.(bk./ak)
+    Ak = ak ./ cos.(phi_k)
+    return Ak, phi_k, freqs
+end
+
+
+"""
+Compute the signal at time t defined by the sinusoidal amplitude-phase coefficients and FFT frequencies truncated
+to the N frequency components with largest magnitude amplitude.
+"""
+function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
+    c = 0.0
+    if N === nothing
+        for (Ak, phi_k, f) in zip(Aks, phi_ks, freqs)
+            c += Ak*sin(2*pi*f*t+phi_k)
+        end
+    else
+        I = sortperm(abs.(Aks), rev=true)[1:N]
+        for i in I
+            c+= Aks[i]*sin(2*pi*freqs[i]*t+phi_ks[i])
+        end
+    end
+    return c
+end
