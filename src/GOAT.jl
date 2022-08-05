@@ -5,7 +5,7 @@ using DifferentialEquations, SparseArrays, LinearAlgebra
 export SE_action, GOAT_action, ControllableSystem, make_SE_update_function, make_goat_update_function, solve_SE, solve_GOAT_eoms
 
 include("ObjectiveFunctions.jl")
-export J1,J2, ∂J1, ∂J2, g_sm, ∂g_sm, h_sm, ∂h_sm
+export g_sm, ∂g_sm, h_sm, ∂h_sm
 
 include("Ansatze.jl")
 export window, S, general_logistic, dSdx, LO, gaussian_kernel, fourier_ansatz, derivative_fourier_ansatz, derivative_gaussian_ansatz, gaussian_ansatz, sinusoid_kernel, morlet_kernel, morlet_ansatz, derivative_morlet_ansatz, carrier_fourier_ansatz, derivative_carrier_fourier_ansatz, fourier_coefficient, ∂fourier_coefficient, ∂gaussian_coefficient, gaussian_coefficient
@@ -176,7 +176,7 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func; rotating_fra
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    if rotating_frame_generator == nothing
+    if rotating_frame_generator === nothing
         RF_gen = 0*Diagonal(drift_op)
         RF_storage = similar(RF_gen)
         return ControllableSystem{typeof(c_func),typeof(∂c_func)}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_gen, RF_storage, false, d)

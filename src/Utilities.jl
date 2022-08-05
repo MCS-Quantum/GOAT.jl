@@ -155,8 +155,8 @@ function embed_A_into_B!(A,B,B_indices)
 end
 
 function create_initial_vector_U_∂U(num_nonzero; block_inds=nothing, linear_u_index_from_pair=nothing)
-    @assert block_inds != nothing
-    @assert linear_u_index_from_pair != nothing
+    @assert block_inds !== nothing
+    @assert linear_u_index_from_pair !== nothing
     
     u0 = zeros(ComplexF64,num_nonzero*2)
     for block in block_inds
@@ -169,8 +169,8 @@ function create_initial_vector_U_∂U(num_nonzero; block_inds=nothing, linear_u_
 end
 
 function create_initial_vector_U(num_nonzero; block_inds=nothing, linear_u_index_from_pair=nothing)
-    @assert block_inds != nothing
-    @assert linear_u_index_from_pair != nothing
+    @assert block_inds !== nothing
+    @assert linear_u_index_from_pair !== nothing
     u0 = zeros(ComplexF64,num_nonzero)
     for block in block_inds
         for row in block
@@ -182,8 +182,8 @@ function create_initial_vector_U(num_nonzero; block_inds=nothing, linear_u_index
 end
 
 function unpack_u_∂u(u; block_inds=nothing, linear_u_index_from_pair=nothing)
-    @assert block_inds != nothing
-    @assert linear_u_index_from_pair != nothing
+    @assert block_inds !== nothing
+    @assert linear_u_index_from_pair !== nothing
     row_inds = Int[]
     col_inds = Int[]
     vals_u = ComplexF64[]
@@ -205,8 +205,8 @@ function unpack_u_∂u(u; block_inds=nothing, linear_u_index_from_pair=nothing)
 end
 
 function unpack_u(u; block_inds=nothing, linear_u_index_from_pair=nothing)
-    @assert block_inds != nothing
-    @assert linear_u_index_from_pair != nothing
+    @assert block_inds !== nothing
+    @assert linear_u_index_from_pair !== nothing
     row_inds = Int[]
     col_inds = Int[]
     vals_u = ComplexF64[]
@@ -225,8 +225,8 @@ function unpack_u(u; block_inds=nothing, linear_u_index_from_pair=nothing)
 end
 
 function unpack_us_∂us(us; block_inds=nothing, linear_u_index_from_pair=nothing)
-    @assert block_inds != nothing
-    @assert linear_u_index_from_pair != nothing
+    @assert block_inds !== nothing
+    @assert linear_u_index_from_pair !== nothing
     row_inds = Int[]
     col_inds = Int[]
     vals_us = [ComplexF64[] for u in us]
@@ -239,7 +239,7 @@ function unpack_us_∂us(us; block_inds=nothing, linear_u_index_from_pair=nothin
                 push!(col_inds,col)
                 k1 = linear_u_index_from_pair[row,col, 1]
                 k2 = linear_u_index_from_pair[row,col, 2]
-                for i in 1:length(us)
+                for i in 1:eachindex(us)
                     push!(vals_us[i],us[i][k1])
                     push!(vals_∂us[i],us[i][k2])
                 end
