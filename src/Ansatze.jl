@@ -212,7 +212,7 @@ function fourier_coefficient(p,t,i,K::Int64,N::Int64)
     c = 0.0
     for n in 1:N
         j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-        c += p[j+1]*sin(p[j+2]*t+p[j+3])
+        c += p[j+1]*cos(2*pi*p[j+2]*t+p[j+3])
     end
     return c
 end
@@ -229,11 +229,11 @@ function ∂fourier_coefficient(p,t,i,l,K::Int64,N::Int64)
         for n in 1:N
             j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
             if j+1 == l
-                c += sin(p[j+2]*t+p[j+3])
+                c += cos(2*pi*p[j+2]*t+p[j+3])
             elseif j+2 == l
-                c += t*p[j+1]*cos(p[j+2]*t+p[j+3])
+                c += -2*pi*t*p[j+1]*sin(2*pi*p[j+2]*t+p[j+3])
             elseif j+3 == l
-                c += p[j+1]*cos(p[j+2]*t+p[j+3])
+                c += -p[j+1]*sin(2*pi*p[j+2]*t+p[j+3])
             end
         end
         return c
