@@ -2,7 +2,7 @@ module GOAT
 
 using DifferentialEquations, SparseArrays, LinearAlgebra
 
-export SE_action, GOAT_action, ControllableSystem, make_SE_update_function, make_goat_update_function, solve_SE, solve_GOAT_eoms
+export SE_action, GOAT_action, ControllableSystem, make_SE_update_function, make_GOAT_update_function, solve_SE, solve_GOAT_eoms, make_GOAT_initial_state
 
 include("ObjectiveFunctions.jl")
 export g_sm, ∂g_sm, h_sm, ∂h_sm
@@ -136,7 +136,10 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, param_inds, 
             c_ms_ = c_ms[i]
             c_vs_ = c_vs[i]
             c = c_func(p,t,i)
-            for (m,l,v) in zip(c_ms_,c_ls_,c_vs_)
+            for n in eachindex(c_ls)
+                m = c_ms_[m]
+                l = c_ls_[m]
+                v = c_vs_[m]
                 Bll = B[l,l]
                 Bmm = conj(B[m,m])
                 umn = u[m,n]
