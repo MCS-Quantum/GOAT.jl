@@ -137,9 +137,9 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, param_inds, 
             c_vs_ = c_vs[i]
             c = c_func(p,t,i)
             for n in eachindex(c_ls)
-                m = c_ms_[m]
-                l = c_ls_[m]
-                v = c_vs_[m]
+                m = c_ms_[n]
+                l = c_ls_[n]
+                v = c_vs_[n]
                 Bll = B[l,l]
                 Bmm = conj(B[m,m])
                 umn = u[m,n]
