@@ -1,4 +1,4 @@
-using QuantumOptics
+using QuantumOptics, FFTW
 
 
 function make_fock_projector(basis,levels)
@@ -224,6 +224,11 @@ function unpack_u(u; block_inds=nothing, linear_u_index_from_pair=nothing)
     return u
 end
 
+"""
+    unpack_us_∂us(us; block_inds=nothing, linear_u_index_from_pair=nothing)
+
+TBW
+"""
 function unpack_us_∂us(us; block_inds=nothing, linear_u_index_from_pair=nothing)
     @assert block_inds !== nothing
     @assert linear_u_index_from_pair !== nothing
@@ -252,6 +257,8 @@ function unpack_us_∂us(us; block_inds=nothing, linear_u_index_from_pair=nothin
 end
 
 """
+    get_sinusoidal_coefficients_from_FFT(ts, s)
+
 Compute the sinusoidal amplitude-phase coefficients and frequencies from FFT of the signal s with timeseries ts. 
 """
 function get_sinusoidal_coefficients_from_FFT(ts, s)
@@ -271,8 +278,10 @@ end
 
 
 """
+    truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
+
 Compute the signal at time t defined by the sinusoidal amplitude-phase coefficients and FFT frequencies truncated
-to the N frequency components with largest magnitude amplitude.
+to the N frequency components with largest magnitude.
 """
 function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
     c = 0.0
