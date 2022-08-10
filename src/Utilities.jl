@@ -267,7 +267,7 @@ function get_sinusoidal_coefficients_from_FFT(ts, s)
     fs = 1/dt
     N = size(ts,1)
     Fs = fft(s)[1:N÷2]
-    freqs = fftfreq(length(s),fs)
+    freqs = 2 .* pi .* fftfreq(length(s),fs)
     ak = (2/N)*real.(Fs)
     bk = (-2/N)*imag.(Fs)
     ak[1] = ak[1]/2
@@ -287,12 +287,12 @@ function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
     c = 0.0
     if N === nothing
         for (Ak, phi_k, f) in zip(Aks, phi_ks, freqs)
-            c += Ak*sin(2*pi*f*t+phi_k)
+            c += Ak*sin(f*t+phi_k)
         end
     else
         I = sortperm(abs.(Aks), rev=true)[1:N]
         for i in I
-            c+= Aks[i]*sin(2*pi*freqs[i]*t+phi_ks[i])
+            c+= Aks[i]*sin(freqs[i]*t+phi_ks[i])
         end
     end
     return c
