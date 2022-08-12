@@ -273,7 +273,7 @@ function get_sinusoidal_coefficients_from_FFT(ts, s)
     ak[1] = ak[1]/2
     phi_k = atan.(bk./ak)
     Ak = ak ./ cos.(phi_k)
-    return Ak, phi_k, freqs
+    return Ak, -phi_k, freqs
 end
 
 
@@ -287,12 +287,12 @@ function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
     c = 0.0
     if N === nothing
         for (Ak, phi_k, f) in zip(Aks, phi_ks, freqs)
-            c += Ak*cos(f*t-phi_k)
+            c += Ak*cos(f*t+phi_k)
         end
     else
         I = sortperm(abs.(Aks), rev=true)[1:N]
         for i in I
-            c+= Aks[i]*cos(freqs[i]*t-phi_ks[i])
+            c+= Aks[i]*cos(freqs[i]*t+phi_ks[i])
         end
     end
     return c
