@@ -242,7 +242,7 @@ end
 
 QOCProblem(target, control_time, Pc, Pa) = QOCProblem(Pc, Int(tr(Pc)), Pa, Int(tr(Pa)), target, control_time)
 
-function GOAT_infidelity_reduce_map(sys,prob,goat_sol)
+function GOAT_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,goat_sol)
     d = sys.dim    
     Pc = prob.Pc
     Pc_dim = prob.Pc_dim
@@ -261,7 +261,7 @@ function GOAT_infidelity_reduce_map(sys,prob,goat_sol)
     return g, ∂g_vec
 end
 
-function SE_infidelity_reduce_map(sys,prob,SE_sol)
+function SE_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,SE_sol)
     d = sys.dim
     Pc = prob.Pc
     Pc_dim = prob.Pc_dim
@@ -271,7 +271,7 @@ function SE_infidelity_reduce_map(sys,prob,SE_sol)
     return g
 end
 
-function solve_GOAT_eoms_reduce(x, sys, prob, param_inds, GOAT_reduce_map, diffeq_options)
+function solve_GOAT_eoms_reduce(x, sys::ControllableSystem, prob::QOCProblem, param_inds, GOAT_reduce_map, diffeq_options)
     T = prob.control_time
     goat_sol = solve_GOAT_eoms(sys,param_inds,T,x; diffeq_options...)
     println(goat_sol.u[end])
@@ -281,7 +281,7 @@ function solve_GOAT_eoms_reduce(x, sys, prob, param_inds, GOAT_reduce_map, diffe
     return g, ∂gs
 end
 
-function parallel_GOAT_fg!(F, G, x, sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
+function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
     T = prob.control_time
     if G != nothing
         num_params = size(x,1)
@@ -309,7 +309,7 @@ function parallel_GOAT_fg!(F, G, x, sys, prob, SE_reduce_map, GOAT_reduce_map, d
 
 end
 
-function find_optimal_controls(x0, sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
+function find_optimal_controls(x0, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
     fg!(F,G,x) = parallel_GOAT_fg!(F,G,x,sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
     res = Optim.optimize(Optim.only_fg!(fg!), x0, optim_alg, optim_options)
     return res
