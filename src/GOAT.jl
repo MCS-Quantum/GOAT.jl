@@ -1,9 +1,9 @@
 module GOAT
 
-using DifferentialEquations, SparseArrays, LinearAlgebra, Distributed
+using DifferentialEquations, SparseArrays, LinearAlgebra, Distributed, Optim
 
 export SE_action, GOAT_action, ControllableSystem, make_SE_update_function, make_GOAT_update_function, solve_SE, solve_GOAT_eoms, make_GOAT_initial_state
-export QOCProblem,
+export QOCProblem, GOAT_infidelity_reduce_map, SE_infidelity_reduce_map, solve_GOAT_eoms_reduce, parallel_GOAT_fg!, find_optimal_controls
 
 
 include("ObjectiveFunctions.jl")
