@@ -1,8 +1,10 @@
 module GOAT
 
-using DifferentialEquations, SparseArrays, LinearAlgebra
+using DifferentialEquations, SparseArrays, LinearAlgebra, Distributed
 
 export SE_action, GOAT_action, ControllableSystem, make_SE_update_function, make_GOAT_update_function, solve_SE, solve_GOAT_eoms, make_GOAT_initial_state
+export QOCProblem,
+
 
 include("ObjectiveFunctions.jl")
 export g_sm, ∂g_sm, h_sm, ∂h_sm
@@ -228,6 +230,91 @@ function solve_GOAT_eoms(sys::ControllableSystem, param_inds::Vector{Int}, Tmax:
     sol = solve(prob; args...)
     return sol
 end
+
+struct QOCProblem
+    Pc::Array{ComplexF64}
+    Pc_dim::Int64
+    Pa::Array{ComplexF64}
+    Pa_dim::Int64
+    target::Array{ComplexF64}
+    control_time::Float64
+end
+
+QOCProblem(target, control_time, Pc, Pa) = QOCProblem(Pc, Int(tr(Pc)), Pa, Int(tr(Pa)), target, control_time)
+
+function GOAT_infidelity_reduce_map(sys,prob,goat_sol)
+    d = sys.dim    
+    Pc = prob.Pc
+    Pc_dim = prob.Pc_dim
+    target = prob.target
+    goatU = goat_sol.u[end]
+    n_params = size(goatU,1)÷d
+    Ut = goatU[1:d,:]
+    g = g_sm(Pc*target*Pc, Ut; dim=Pc_dim)
+
+    ∂g_vec = Float64[]
+    for i in 1:n_params-1
+        ∂Ut = goatU[i*d+1:(i+1)*d,:]
+        ∂g = ∂g_sm(Pc*target*Pc, Ut, ∂Ut ; dim=Pc_dim)
+        push!(∂g_vec,∂g)
+    end
+    return g, ∂g_vec
+end
+
+function SE_infidelity_reduce_map(sys,prob,SE_sol)
+    d = sys.dim
+    Pc = prob.Pc
+    Pc_dim = prob.Pc_dim
+    target = prob.target
+    Ut = SE_sol.u[end]
+    g = g_sm(Pc*target*Pc, Ut; dim=Pc_dim)
+    return g
+end
+
+function solve_GOAT_eoms_reduce(x, sys, prob, param_inds, GOAT_reduce_map, diffeq_options)
+    T = prob.control_time
+    goat_sol = solve_GOAT_eoms(sys,param_inds,T,x; diffeq_options...)
+    println(goat_sol.u[end])
+    out = GOAT_reduce_map(sys, prob, goat_sol)
+    g = first(out)
+    ∂gs = last(out)
+    return g, ∂gs
+end
+
+function parallel_GOAT_fg!(F, G, x, sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
+    T = prob.control_time
+    if G != nothing
+        num_params = size(x,1)
+        if num_params_per_GOAT === nothing
+            num_params_per_GOAT = num_params
+        end
+        goat_param_indices = collect.(collect(Iterators.partition([1:num_params;], num_params_per_GOAT)))
+        @everywhere f = y -> solve_GOAT_eoms_reduce($x, $sys, $prob, y, $GOAT_reduce_map, $diffeq_options)
+        out = pmap(f,goat_param_indices)
+        gs = first.(out)
+        # @assert gs[1] ≈ gs[end] # Trivial sanity check
+        for (i,inds) in enumerate(goat_param_indices)
+            ∂gs = last(out[i])
+            G[inds] .= ∂gs
+        end
+        g = gs[1]
+    else
+        sol = solve_SE(sys,T,x; diffeq_options...)
+        g = SE_reduce_map(sys,prob,sol)
+    end
+    
+    if F != nothing
+        return g
+    end
+
+end
+
+function find_optimal_controls(x0, sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
+    fg!(F,G,x) = parallel_GOAT_fg!(F,G,x,sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
+    res = Optim.optimize(Optim.only_fg!(fg!), x0, optim_alg, optim_options)
+    return res
+end
+    
 
 
 end # module
