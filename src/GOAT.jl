@@ -288,7 +288,7 @@ function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, S
             num_params_per_GOAT = num_params
         end
         goat_param_indices = collect.(collect(Iterators.partition([1:num_params;], num_params_per_GOAT)))
-        f = y -> solve_GOAT_eoms_reduce($x, $sys, $prob, y, $GOAT_reduce_map, $diffeq_options)
+        f = y -> solve_GOAT_eoms_reduce(x, sys, prob, y, GOAT_reduce_map, diffeq_options)
         out = pmap(f,goat_param_indices)
         gs = first.(out)
         # @assert gs[1] ≈ gs[end] # Trivial sanity check
