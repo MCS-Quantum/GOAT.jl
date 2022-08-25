@@ -10,7 +10,9 @@ include("ObjectiveFunctions.jl")
 export g_sm, ∂g_sm, h_sm, ∂h_sm
 
 include("Ansatze.jl")
-export window, S, general_logistic, dSdx, LO, gaussian_kernel, fourier_ansatz, derivative_fourier_ansatz, derivative_gaussian_ansatz, gaussian_ansatz, sinusoid_kernel, morlet_kernel, morlet_ansatz, derivative_morlet_ansatz, carrier_fourier_ansatz, derivative_carrier_fourier_ansatz, fourier_coefficient, ∂fourier_coefficient, ∂gaussian_coefficient, gaussian_coefficient
+export window, S, general_logistic, dSdx, LO, gaussian_kernel, fourier_ansatz, derivative_fourier_ansatz, derivative_gaussian_ansatz
+export gaussian_ansatz, sinusoid_kernel, morlet_kernel, morlet_ansatz, derivative_morlet_ansatz, carrier_fourier_ansatz, derivative_carrier_fourier_ansatz
+export fourier_coefficient, ∂fourier_coefficient, ∂gaussian_coefficient, gaussian_coefficient, poly_coefficient, ∂poly_coefficient
 
 include("Utilities.jl")
 export make_fock_projector, direct_sum, make_operator_basis, sparse_direct_sum, isunitary, save_opt_results, embed_square_matrix, Givens_rmul!, Givens_SUn!, SUnSUn!, embed_A_into_B!, create_initial_vector_U_∂U, create_initial_vector_U, unpack_u_∂u, unpack_u, unpack_us_∂us, get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
