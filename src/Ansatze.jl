@@ -278,7 +278,7 @@ function poly_coefficient(p,t,i,K::Int64,N::Int64)
     c = 0.0
     for n in 1:N
         j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-        c += p[j+1]*(t-p[j+1])^j
+        c += p[j+1]*(t-p[j+1])^n
     end
     return c
 end
@@ -295,12 +295,12 @@ function ∂poly_coefficient(p,t,i,l,K::Int64,N::Int64)
         for n in 1:N
             j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
             if j+1 == l
-                c += (t-p[j+1])^j
+                c += (t-p[j+1])^n
             elseif j+2 == l
-                c += -p[j+1]*j*(t-p[j+1])^(j-1)
+                c += -p[j+1]*n*(t-p[j+1])^(n-1)
             end
         end
         return c
     end
     return 0.0
-end
+end 
