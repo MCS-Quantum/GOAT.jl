@@ -274,16 +274,14 @@ function ∂gaussian_coefficient(p,t,i,l,K::Int64,N::Int64)
     return 0.0
 end
 
-function poly_coefficient(p,t,i,K::Int64,N::Int64)
-    c = 0.0
-    for n in 1:N
-        j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-        if n==1
-            c+=p[j+1]
-        else
-            j+=1
-            c += p[j+1]*(t-p[j+2])^(n-1)
-        end
+function poly_coefficient(p,t,i,N::Int64)
+    M = 2*N-1 # Number of parameters for each control term
+    j0 = (i-1)*M+1
+    jstop = i*M
+    c = p[j0]
+    jstart = j0+1
+    for (n,j) in enumerate(jstart:2:jstop)
+        c += p[j]*(t-p[j+1])^(n)
     end
     return c
 end
@@ -292,24 +290,23 @@ end
 """
 Partial deriv of c_func w.r.t the lth element of p
 """
-function ∂poly_coefficient(p,t,i,l,K::Int64,N::Int64)
-    jmin = (i-1)*K*N+1
-    jmax = i*K*N
-    if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms
-        c = 0.0
-        for n in 1:N
-            j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-            if n==1
-                c += 1.0
-            else
-                if j+1 == l
-                    c += (t-p[j+2])^(n-1)
-                elseif j+2 == l
-                    c += -p[j+1]*(n-1)*(t-p[j+2])^(n-2)
-                end
+function ∂poly_coefficient(p,t,i,l,N::Int64)
+    M = 2*N-1 # Number of parameters for each control term
+    j0 = (i-1)*M+1
+    jstop = i*M
+    jrange = j0:jstop
+    c = 0.0
+    if l==j0
+        c += 1.0
+    elseif l in jrange
+        jstart = j0+1
+        for (n,j) in enumerate(jstart:2:jstop)
+            if j == l
+                c+= (t-p[j+1])^(n)
+            elseif j+1 == l
+                c+= -p[j]*(n)*(t-p[j+1])^(n)
             end
         end
-        return c
     end
-    return 0.0
-end 
+    return c
+end
