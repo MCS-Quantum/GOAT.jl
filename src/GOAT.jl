@@ -284,7 +284,7 @@ end
 
 function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
     T = prob.control_time
-    if G != nothing
+    if G !== nothing
         num_params = size(x,1)
         if num_params_per_GOAT === nothing
             num_params_per_GOAT = num_params
@@ -304,7 +304,7 @@ function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, S
         g = SE_reduce_map(sys,prob,sol)
     end
     
-    if F != nothing
+    if F !== nothing
         return g
     end
 
