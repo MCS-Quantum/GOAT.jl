@@ -73,11 +73,11 @@ function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func, A::Diagonal, B
     lmul!(-im, du)
 end
 
-function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, param_inds, c_func::Function, ∂c_func::Function)
+function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
-    num_params = size(param_inds,1)
+    num_params = size(opt_param_inds,1)
     for n in 1:d
         for (m,l,v) in zip(d_ms,d_ls,d_vs)
             du[l,n] += v*u[m,n]
@@ -96,7 +96,7 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, param_inds, 
             for (m,l,v) in zip(c_ms_,c_ls_,c_vs_)
                 umn = u[m,n]
                 du[l,n] += c*v*umn
-                for (j,k) in enumerate(param_inds)
+                for (j,k) in enumerate(opt_param_inds)
                     lj = j*d+l
                     mj = j*d+m
                     du[lj,n] += c*v*u[mj,n]
@@ -109,11 +109,11 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, param_inds, 
     lmul!(-im, du)
 end
 
-function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, param_inds, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
+function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
-    num_params = size(param_inds,1)
+    num_params = size(opt_param_inds,1)
     
     for i in 1:d
         B[i,i] = exp(-im*t*A[i,i])
@@ -145,7 +145,7 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, param_inds, 
                 Bmm = conj(B[m,m])
                 umn = u[m,n]
                 du[l,n] += c*v*umn*Bll*Bmm
-                for (j,k) in enumerate(param_inds)
+                for (j,k) in enumerate(opt_param_inds)
                     lj = j*d+l
                     mj = j*d+m
                     du[lj,n] += c*v*u[mj,n]*Bll*Bmm
@@ -197,16 +197,16 @@ function make_SE_update_function(sys::ControllableSystem)
     end
 end
 
-function make_GOAT_update_function(sys::ControllableSystem, param_inds::Vector{Int})
+function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vector{Int})
     if sys.use_rotating_frame
-        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
+        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
     else
-        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, param_inds, sys.coefficient_func, sys.∂coefficient_func)
+        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
     end
 end
 
-function make_GOAT_initial_state(d,param_inds)
-    n_us = size(param_inds,1)+1
+function make_GOAT_initial_state(d,opt_param_inds)
+    n_us = size(opt_param_inds,1)+1
     u0 = zeros(ComplexF64,d*n_us,d)
     for n in 1:d
         u0[n,n] = 1.0
@@ -224,10 +224,10 @@ function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; ar
 end
 
 
-function solve_GOAT_eoms(sys::ControllableSystem, param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; args...)
+function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; args...)
     tspan = (0.0,Tmax)
-    g = make_GOAT_update_function(sys, param_inds)
-    u0 = make_GOAT_initial_state(sys.dim, param_inds)
+    g = make_GOAT_update_function(sys, opt_param_inds)
+    u0 = make_GOAT_initial_state(sys.dim, opt_param_inds)
     prob = ODEProblem(g,u0,tspan,p)
     sol = solve(prob; args...)
     return sol
@@ -273,9 +273,9 @@ function SE_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,SE_so
     return g
 end
 
-function solve_GOAT_eoms_reduce(x, sys::ControllableSystem, prob::QOCProblem, param_inds, GOAT_reduce_map, diffeq_options)
+function solve_GOAT_eoms_reduce(x, sys::ControllableSystem, prob::QOCProblem, opt_param_inds, GOAT_reduce_map, diffeq_options)
     T = prob.control_time
-    goat_sol = solve_GOAT_eoms(sys,param_inds,T,x; diffeq_options...)
+    goat_sol = solve_GOAT_eoms(sys,opt_param_inds,T,x; diffeq_options...)
     out = GOAT_reduce_map(sys, prob, goat_sol)
     g = first(out)
     ∂gs = last(out)
@@ -289,7 +289,7 @@ function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, S
         if num_params_per_GOAT === nothing
             num_params_per_GOAT = num_params
         end
-        goat_param_indices = collect.(collect(Iterators.partition([1:num_params;], num_params_per_GOAT)))
+        goat_param_indices = collect.(collect(Iterators.partition(1:num_params, num_params_per_GOAT)))
         f = y -> solve_GOAT_eoms_reduce(x, sys, prob, y, GOAT_reduce_map, diffeq_options)
         out = pmap(f,goat_param_indices)
         gs = first.(out)
@@ -310,12 +310,47 @@ function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, S
 
 end
 
-function find_optimal_controls(x0, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
+function parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
+    T = prob.control_time
+    p_storage[opt_param_inds] .= x # Update the storage vector with new parameters from optimization
+    if G !== nothing
+        num_params = size(x,1)
+        if num_params_per_GOAT === nothing
+            num_params_per_GOAT = num_params
+        end
+        goat_param_indices = collect.(collect(Iterators.partition(opt_param_inds, num_params_per_GOAT)))
+        f = y -> solve_GOAT_eoms_reduce(p_storage, sys, prob, y, GOAT_reduce_map, diffeq_options)
+        out = pmap(f,goat_param_indices)
+        gs = first.(out)
+        # @assert gs[1] ≈ gs[end] # Trivial sanity check
+        for (i,inds) in enumerate(goat_param_indices)
+            ∂gs = last(out[i])
+            G[inds] .= ∂gs
+        end
+        g = gs[1]
+    else
+        sol = solve_SE(sys,T,p_storage; diffeq_options...)
+        g = SE_reduce_map(sys,prob,sol)
+    end
+    
+    if F !== nothing
+        return g
+    end
+
+end
+
+function find_optimal_controls(p0, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
     fg!(F,G,x) = parallel_GOAT_fg!(F,G,x,sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
-    res = Optim.optimize(Optim.only_fg!(fg!), x0, optim_alg, optim_options)
+    res = Optim.optimize(Optim.only_fg!(fg!), p0, optim_alg, optim_options)
     return res
 end
     
-
+function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
+    p_storage = deepcopy(p0)
+    fg!(F,G,x) = parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
+    x0 = @view p0[opt_param_inds]
+    res = Optim.optimize(Optim.only_fg!(fg!), x0, optim_alg, optim_options)
+    return res
+end
 
 end # module
