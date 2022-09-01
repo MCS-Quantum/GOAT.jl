@@ -1,4 +1,4 @@
-using QuantumOptics, FFTW
+using QuantumOptics, FFTW, Random
 
 
 function make_fock_projector(basis,levels)
@@ -296,4 +296,14 @@ function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
         end
     end
     return c
+end
+
+function pink_noise(t; lf=1e-3, hf=20.0, n=50,alpha=1, seed=121314)
+    freqs = range(lf,hf,length=n)
+    rand_phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
+    st = 0.0
+    for (f,p) in zip(freqs,rand_phases)
+        st += sin(t*f*2*pi+2*pi*p)/(f^alpha)
+    end
+    return st
 end

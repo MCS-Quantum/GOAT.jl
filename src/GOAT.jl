@@ -15,7 +15,11 @@ export gaussian_ansatz, sinusoid_kernel, morlet_kernel, morlet_ansatz, derivativ
 export fourier_coefficient, ∂fourier_coefficient, ∂gaussian_coefficient, gaussian_coefficient, poly_coefficient, ∂poly_coefficient
 
 include("Utilities.jl")
-export make_fock_projector, direct_sum, make_operator_basis, sparse_direct_sum, isunitary, save_opt_results, embed_square_matrix, Givens_rmul!, Givens_SUn!, SUnSUn!, embed_A_into_B!, create_initial_vector_U_∂U, create_initial_vector_U, unpack_u_∂u, unpack_u, unpack_us_∂us, get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
+export make_fock_projector, direct_sum, make_operator_basis, sparse_direct_sum, isunitary
+export save_opt_results, embed_square_matrix, Givens_rmul!, Givens_SUn!, SUnSUn!
+export embed_A_into_B!, create_initial_vector_U_∂U, create_initial_vector_U, unpack_u_∂u
+export unpack_u, unpack_us_∂us, get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
+export pink_noise
 
 
 function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func)
@@ -351,6 +355,20 @@ function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob
     x0 = @view p0[opt_param_inds]
     res = Optim.optimize(Optim.only_fg!(fg!), x0, optim_alg, optim_options)
     return res
+end
+
+function evaluate_infidelity(p0, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
+    T = prob.control_time
+    sol = solve_SE(sys,T,p0; diffeq_options...)
+    g = SE_reduce_map(sys, prob, sol)
+    return g
+end
+
+function parallel_evaluate_infidelity(ps, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map)
+
+    f = y -> evaluate_infidelity(y, sys, prob, SE_reduce_map, diffeq_options)
+    out = pmap(f,ps)
+    return out
 end
 
 end # module
