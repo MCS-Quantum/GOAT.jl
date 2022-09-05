@@ -21,7 +21,7 @@ export make_fock_projector, direct_sum, make_operator_basis, sparse_direct_sum, 
 export save_opt_results, embed_square_matrix, Givens_rmul!, Givens_SUn!, SUnSUn!
 export embed_A_into_B!, create_initial_vector_U_∂U, create_initial_vector_U, unpack_u_∂u
 export unpack_u, unpack_us_∂us, get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
-export pink_noise
+export colored_noise
 
 
 function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func)
