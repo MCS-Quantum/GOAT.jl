@@ -299,7 +299,7 @@ function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
 end
 
 function colored_noise(t::Float64; lf::Float64=0.001, hf::Float64=20.0, n::Int64=50, alpha::Float64=1.0, seed::Int64=121314)
-    freqs = range(lf,hf,n)
+    freqs = range(lf,hf,length=n)
     rand_phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
     st = 0.0
     for (f,p) in zip(freqs,rand_phases)
