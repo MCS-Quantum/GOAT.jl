@@ -305,5 +305,6 @@ function colored_noise(t::Float64; lf::Float64=0.001, hf::Float64=20.0, n::Int64
     for (f,p) in zip(freqs,rand_phases)
         st += sin(t*f*2*pi+2*pi*p)*(f^alpha)
     end
-    return st
+    scale = lf^alpha
+    return st*scale
 end
