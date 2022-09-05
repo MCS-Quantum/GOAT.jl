@@ -2,8 +2,10 @@ module GOAT
 
 using DifferentialEquations, SparseArrays, LinearAlgebra, Distributed, Optim
 
-export SE_action, GOAT_action, ControllableSystem, make_SE_update_function, make_GOAT_update_function, solve_SE, solve_GOAT_eoms, make_GOAT_initial_state
-export QOCProblem, GOAT_infidelity_reduce_map, SE_infidelity_reduce_map, solve_GOAT_eoms_reduce, parallel_GOAT_fg!, find_optimal_controls
+export SE_action, GOAT_action, ControllableSystem, make_SE_update_function
+export make_GOAT_update_function, solve_SE, solve_GOAT_eoms, make_GOAT_initial_state
+export QOCProblem, GOAT_infidelity_reduce_map, SE_infidelity_reduce_map
+export solve_GOAT_eoms_reduce, parallel_GOAT_fg!, find_optimal_controls, evaluate_infidelity
 
 
 include("ObjectiveFunctions.jl")
@@ -357,14 +359,14 @@ function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob
     return res
 end
 
-function evaluate_infidelity(p0, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
+function evaluate_infidelity(p0::Vector{Float64}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
     T = prob.control_time
     sol = solve_SE(sys,T,p0; diffeq_options...)
     g = SE_reduce_map(sys, prob, sol)
     return g
 end
 
-function parallel_evaluate_infidelity(ps, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map)
+function evaluate_infidelity(ps::Vector{Vector{Float64}}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map)
 
     f = y -> evaluate_infidelity(y, sys, prob, SE_reduce_map, diffeq_options)
     out = pmap(f,ps)
