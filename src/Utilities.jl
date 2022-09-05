@@ -298,8 +298,8 @@ function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
     return c
 end
 
-function pink_noise(t; lf=1e-3, hf=20.0, n=50,alpha=1, seed=121314)
-    freqs = range(lf,hf,length=n)
+function pink_noise(t::Float64; lf::Float64=0.001, hf::Float64=20.0, n::Int64=50, alpha::Float64=1, seed::Int64=121314)
+    freqs = range(lf,hf,n)
     rand_phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
     st = 0.0
     for (f,p) in zip(freqs,rand_phases)
@@ -307,3 +307,5 @@ function pink_noise(t; lf=1e-3, hf=20.0, n=50,alpha=1, seed=121314)
     end
     return st
 end
+
+function 
