@@ -298,13 +298,18 @@ function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
     return c
 end
 
+function time_domain_signal(t::Float64, amps::Vector{Float64}, freqs::Vector{Float64}, phases::Vector{Float64})
+    c = 0.0
+    for (a,f,p) in zip(amps, freqs, phases)
+        c += sin(t*2*pi*f+2*pi*p)*a
+    end
+    return c
+end
+
+
 function colored_noise(t::Float64; lf::Float64=0.001, hf::Float64=20.0, n::Int64=50, alpha::Float64=1.0, seed::Int64=121314)
     freqs = range(lf,hf,length=n)
-    rand_phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
-    st = 0.0
-    for (f,p) in zip(freqs,rand_phases)
-        st += sin(t*f*2*pi+2*pi*p)*(f^alpha)
-    end
-    scale = lf^alpha
-    return st/scale
-end
+    amps = f.^alpha
+    phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
+    return amps, freqs, phases
+end 
