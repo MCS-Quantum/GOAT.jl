@@ -307,9 +307,9 @@ function time_domain_signal(t::Float64, amps::Vector{Float64}, freqs::Vector{Flo
 end
 
 
-function colored_noise(t::Float64; lf::Float64=0.001, hf::Float64=20.0, n::Int64=50, alpha::Float64=1.0, seed::Int64=121314)
-    freqs = range(lf,hf,length=n)
-    amps = f.^alpha
+function colored_noise(lf::Float64, hf::Float64, n::Int64, alpha::Float64, seed::Int64)
+    freqs = collect(range(lf,hf,length=n))
+    amps = freqs.^alpha
     phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
     return amps, freqs, phases
 end 

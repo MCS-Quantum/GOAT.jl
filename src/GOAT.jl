@@ -329,9 +329,11 @@ function parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys::Controllable
         out = pmap(f,goat_param_indices)
         gs = first.(out)
         # @assert gs[1] ≈ gs[end] # Trivial sanity check
-        for (i,inds) in enumerate(goat_param_indices)
+        for i in 1:size(goat_param_indices,1)
+            start = num_params_per_GOAT*(i-1)+1
+            stop = num_params_per_GOAT*i
             ∂gs = last(out[i])
-            G[inds] .= ∂gs
+            G[start:stop] .= ∂gs
         end
         g = gs[1]
     else
@@ -354,7 +356,7 @@ end
 function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
     p_storage = deepcopy(p0)
     fg!(F,G,x) = parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
-    x0 = @view p0[opt_param_inds]
+    x0 = p0[opt_param_inds]
     res = Optim.optimize(Optim.only_fg!(fg!), x0, optim_alg, optim_options)
     return res
 end
