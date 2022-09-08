@@ -311,7 +311,7 @@ end
 
 
 function make_SE_update_function(sys::ControllableSystem)
-    if typeof(sys.d_ls) === nothing
+    if sys.d_ls === nothing
         return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
     elseif typeof(sys.rotating_frame_generator) <: LinearAlgebra.Diagonal
         return (du,u,p,t)-> SE_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
@@ -321,7 +321,7 @@ function make_SE_update_function(sys::ControllableSystem)
 end
 
 function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vector{Int})
-    if typeof(sys.d_ls) === nothing
+    if sys.d_ls === nothing
         return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
     elseif typeof(sys.rotating_frame_generator) <: LinearAlgebra.Diagonal
         return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
@@ -346,7 +346,7 @@ function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; ar
     prob = ODEProblem(f,u0, tspan, p)
     sol = solve(prob; args...)
     return sol
-en
+end
 
 
 function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; args...)
@@ -481,7 +481,6 @@ function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob
     return res
 end
 
-
 function evaluate_infidelity(p0::Vector{Float64}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
     T = prob.control_time
     sol = solve_SE(sys,T,p0; diffeq_options...)
@@ -490,7 +489,6 @@ function evaluate_infidelity(p0::Vector{Float64}, sys::ControllableSystem, prob:
 end
 
 function evaluate_infidelity(ps::Vector{Vector{Float64}}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
-
     f = y -> evaluate_infidelity(y, sys, prob, SE_reduce_map, diffeq_options)
     out = pmap(f,ps)
     return out
