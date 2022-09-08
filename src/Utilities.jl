@@ -298,7 +298,7 @@ function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
     return c
 end
 
-function time_domain_signal(t::Float64, amps::Vector{Float64}, freqs::Vector{Float64}, phases::Vector{Float64})
+function time_domain_signal(t::Float64, amps, freqs, phases)
     c = 0.0
     for (a,f,p) in zip(amps, freqs, phases)
         c += sin(t*2*pi*f+2*pi*p)*a
