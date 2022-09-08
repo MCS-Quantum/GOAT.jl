@@ -208,17 +208,17 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_in
     lmul!(-im, du)
 end
 
-struct ControllableSystem{D,T,F,R}
-    d_ms::D
-    d_ls::D
-    d_vs::D
+struct ControllableSystem{A,B,C,D,E}
+    d_ms::A
+    d_ls::A
+    d_vs::B
     c_ls::Vector{Vector{Int64}}
     c_ms::Vector{Vector{Int64}}
     c_vs::Vector{Vector{ComplexF64}}
-    coefficient_func::T
-    ∂coefficient_func::F
-    rotating_frame_generator::R
-    rotating_frame_storage::R
+    coefficient_func::C
+    ∂coefficient_func::D
+    rotating_frame_generator::E
+    rotating_frame_storage::E
     use_rotating_frame::Bool
     dim::Int64
 end
@@ -229,7 +229,7 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     d = size(drift_op,1)
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(c_func), typeof(∂c_func), Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d)
     
 end
 
@@ -295,7 +295,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
         return exp(im*t*adiff)*c
     end
 
-    return ControllableSystem{Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, d)
+    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d)
 end
 
 
@@ -305,7 +305,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::LinearAlgebra.Dia
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls),typeof(c_func),typeof(∂c_func),typeof(RF_generator)}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator)}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d)
 
 end
 
@@ -346,26 +346,8 @@ function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; ar
     prob = ODEProblem(f,u0, tspan, p)
     sol = solve(prob; args...)
     return sol
-end
+en
 
-function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; args...)
-    tspan = (0.0, Tmax)
-    f = make_SE_update_function(sys)
-    u0 = Matrix{ComplexF64}(I, sys.dim, sys.dim)
-    prob = ODEProblem(f,u0, tspan, p)
-    sol = solve(prob; args...)
-    return sol
-end
-
-
-function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; args...)
-    tspan = (0.0,Tmax)
-    g = make_GOAT_update_function(sys, opt_param_inds)
-    u0 = make_GOAT_initial_state(sys.dim, opt_param_inds)
-    prob = ODEProblem(g,u0,tspan,p)
-    sol = solve(prob; args...)
-    return sol
-end
 
 function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; args...)
     tspan = (0.0,Tmax)
@@ -406,35 +388,6 @@ function GOAT_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,goa
     return g, ∂g_vec
 end
 
-function GOAT_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,goat_sol)
-    d = sys.dim    
-    Pc = prob.Pc
-    Pc_dim = prob.Pc_dim
-    target = prob.target
-    goatU = goat_sol.u[end]
-    n_params = size(goatU,1)÷d
-    Ut = goatU[1:d,:]
-    g = g_sm(Pc*target*Pc, Ut; dim=Pc_dim)
-
-    ∂g_vec = Float64[]
-    for i in 1:n_params-1
-        ∂Ut = goatU[i*d+1:(i+1)*d,:]
-        ∂g = ∂g_sm(Pc*target*Pc, Ut, ∂Ut ; dim=Pc_dim)
-        push!(∂g_vec,∂g)
-    end
-    return g, ∂g_vec
-end
-
-function SE_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,SE_sol)
-    d = sys.dim
-    Pc = prob.Pc
-    Pc_dim = prob.Pc_dim
-    target = prob.target
-    Ut = SE_sol.u[end]
-    g = g_sm(Pc*target*Pc, Ut; dim=Pc_dim)
-    return g
-end
-
 function SE_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,SE_sol)
     d = sys.dim
     Pc = prob.Pc
@@ -452,43 +405,6 @@ function solve_GOAT_eoms_reduce(x, sys::ControllableSystem, prob::QOCProblem, op
     g = first(out)
     ∂gs = last(out)
     return g, ∂gs
-end
-
-function solve_GOAT_eoms_reduce(x, sys::ControllableSystem, prob::QOCProblem, opt_param_inds, GOAT_reduce_map, diffeq_options)
-    T = prob.control_time
-    goat_sol = solve_GOAT_eoms(sys,opt_param_inds,T,x; diffeq_options...)
-    out = GOAT_reduce_map(sys, prob, goat_sol)
-    g = first(out)
-    ∂gs = last(out)
-    return g, ∂gs
-end
-
-function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
-    T = prob.control_time
-    if G !== nothing
-        num_params = size(x,1)
-        if num_params_per_GOAT === nothing
-            num_params_per_GOAT = num_params
-        end
-        goat_param_indices = collect.(collect(Iterators.partition(1:num_params, num_params_per_GOAT)))
-        f = y -> solve_GOAT_eoms_reduce(x, sys, prob, y, GOAT_reduce_map, diffeq_options)
-        out = pmap(f,goat_param_indices)
-        gs = first.(out)
-        # @assert gs[1] ≈ gs[end] # Trivial sanity check
-        for (i,inds) in enumerate(goat_param_indices)
-            ∂gs = last(out[i])
-            G[inds] .= ∂gs
-        end
-        g = gs[1]
-    else
-        sol = solve_SE(sys,T,x; diffeq_options...)
-        g = SE_reduce_map(sys,prob,sol)
-    end
-    
-    if F !== nothing
-        return g
-    end
-
 end
 
 function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
@@ -550,54 +466,10 @@ function parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys::Controllable
 
 end
 
-function parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=nothing)
-    T = prob.control_time
-    p_storage[opt_param_inds] .= x # Update the storage vector with new parameters from optimization
-    if G !== nothing
-        num_params = size(x,1)
-        if num_params_per_GOAT === nothing
-            num_params_per_GOAT = num_params
-        end
-        goat_param_indices = collect.(collect(Iterators.partition(opt_param_inds, num_params_per_GOAT)))
-        f = y -> solve_GOAT_eoms_reduce(p_storage, sys, prob, y, GOAT_reduce_map, diffeq_options)
-        out = pmap(f,goat_param_indices)
-        gs = first.(out)
-        # @assert gs[1] ≈ gs[end] # Trivial sanity check
-        for i in 1:size(goat_param_indices,1)
-            start = num_params_per_GOAT*(i-1)+1
-            stop = num_params_per_GOAT*i
-            ∂gs = last(out[i])
-            G[start:stop] .= ∂gs
-        end
-        g = gs[1]
-    else
-        sol = solve_SE(sys,T,p_storage; diffeq_options...)
-        g = SE_reduce_map(sys,prob,sol)
-    end
-    
-    if F !== nothing
-        return g
-    end
-
-end
 
 function find_optimal_controls(p0, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
     fg!(F,G,x) = parallel_GOAT_fg!(F,G,x,sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
     res = Optim.optimize(Optim.only_fg!(fg!), p0, optim_alg, optim_options)
-    return res
-end
-
-function find_optimal_controls(p0, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
-    fg!(F,G,x) = parallel_GOAT_fg!(F,G,x,sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
-    res = Optim.optimize(Optim.only_fg!(fg!), p0, optim_alg, optim_options)
-    return res
-end
-    
-function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, GOAT_reduce_map, diffeq_options, optim_alg, optim_options ; num_params_per_GOAT=nothing)
-    p_storage = deepcopy(p0)
-    fg!(F,G,x) = parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys, prob, SE_reduce_map, GOAT_reduce_map, diffeq_options; num_params_per_GOAT=num_params_per_GOAT)
-    x0 = p0[opt_param_inds]
-    res = Optim.optimize(Optim.only_fg!(fg!), x0, optim_alg, optim_options)
     return res
 end
 
@@ -609,12 +481,6 @@ function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob
     return res
 end
 
-function evaluate_infidelity(p0::Vector{Float64}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
-    T = prob.control_time
-    sol = solve_SE(sys,T,p0; diffeq_options...)
-    g = SE_reduce_map(sys, prob, sol)
-    return g
-end
 
 function evaluate_infidelity(p0::Vector{Float64}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
     T = prob.control_time
@@ -623,14 +489,7 @@ function evaluate_infidelity(p0::Vector{Float64}, sys::ControllableSystem, prob:
     return g
 end
 
-function evaluate_infidelity(ps::Vector{Vector{Float64}}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map)
-
-    f = y -> evaluate_infidelity(y, sys, prob, SE_reduce_map, diffeq_options)
-    out = pmap(f,ps)
-    return out
-end
-
-function evaluate_infidelity(ps::Vector{Vector{Float64}}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map)
+function evaluate_infidelity(ps::Vector{Vector{Float64}}, sys::ControllableSystem, prob::QOCProblem, SE_reduce_map, diffeq_options)
 
     f = y -> evaluate_infidelity(y, sys, prob, SE_reduce_map, diffeq_options)
     out = pmap(f,ps)
