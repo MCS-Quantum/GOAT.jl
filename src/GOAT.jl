@@ -38,6 +38,33 @@ function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func)
     lmul!(-im, du)
 end
 
+function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func, linear_index)
+    d = size(u,2) # Dimension of unitary/Hamiltonian
+    lmul!(0.0,du)
+    for j in 1:d
+        k = 1
+        while k<=j
+            cjk = c_func(p,t,j,k)
+            ckj = conj(cjk)
+            q = linear_index[j,k]
+            r = linear_index[k,j]
+            c_ls_jk = c_ls[q]
+            c_ms_jk = c_ms[q]
+            c_vs_jk = c_vs[q]
+            c_ls_kj = c_ls[r]
+            c_ms_kj = c_ms[r]
+            c_vs_kj = c_vs[r]
+            for (m1,l1,v1, m2,l2,v2) in zip(c_ms_jk,c_ls_jk,c_vs_jk,c_ms_kj,c_ls_kj,c_vs_kj)
+                for n in 1:d
+                    du[l1,n] += cjk*v1*u[m1,n]
+                    du[l2,n] += ckj*v2*u[m2,n]
+                end
+            end
+        end
+    end
+    lmul!(-im, du)
+end
+
 function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
@@ -94,6 +121,32 @@ function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func, A::Diagonal, B
 end
 
 function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function)
+    d = size(u,2) # Dimension of unitary/Hamiltonian
+    lmul!(0.0,du)
+    num_basis_ops = size(c_ms,1)
+    for i in 1:num_basis_ops
+        c_ls_ = c_ls[i]
+        c_ms_ = c_ms[i]
+        c_vs_ = c_vs[i]
+        c = c_func(p,t,i)
+        for (m,l,v) in zip(c_ms_,c_ls_,c_vs_)
+            for n in 1:d
+                umn = u[m,n]
+                du[l,n] += c*v*umn
+                for (j,k) in enumerate(opt_param_inds)
+                    lj = j*d+l
+                    mj = j*d+m
+                    du[lj,n] += c*v*u[mj,n]
+                    dcdk = ∂c_func(p,t,i,k)
+                    du[lj,n] += dcdk*v*umn
+                end
+            end
+        end
+    end
+    lmul!(-im, du)
+end
+
+function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function, linear_index)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -218,6 +271,7 @@ struct ControllableSystem{A,B,C,D,E}
     rotating_frame_storage::E
     use_rotating_frame::Bool
     dim::Int64
+    orthogonal_basis::Bool
 end
 
 
@@ -226,7 +280,8 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     d = size(drift_op,1)
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d)
+    c_vs = [findnz(op)[3] for op in basis_ops]
+    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false)
     
 end
 
@@ -241,9 +296,6 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
     a_diffs = zeros(ComplexF64,d,d)
     aj_drift_aks = zeros(ComplexF64,d,d)
     aj_hi_aks = zeros(ComplexF64,d,N,d)
-    R = Tuple.(CartesianIndices((1:d,1:d))) # A linear index for aj_hi_aks
-    R_js = first.(R)
-    R_ks = last.(R)
     for j in 1:d
         for k in 1:d
             aj = F.values[j]
@@ -265,9 +317,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
         end
     end
     
-    function new_c_func(p,t,l)
-        j = R_js[l]
-        k = R_ks[l]
+    function new_c_func(p,t,j,k)
         c = 0.0+0.0im
         diag_term = 0.0+0.0im
         if j==k
@@ -281,9 +331,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
         return exp(im*t*adiff)*(aj_drift_ak+c+diag_term)
     end
 
-    function new_∂c_func(p,t,l,m)   
-        j = R_js[l]
-        k = R_ks[l]
+    function new_∂c_func(p,t,j,k,m)
         c = 0.0+0.0im
         for i in 1:N
             c += ∂c_func(p,t,i,m)*aj_hi_aks[j,i,k]
@@ -292,7 +340,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
         return exp(im*t*adiff)*c
     end
 
-    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d)
+    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true)
 end
 
 
@@ -302,14 +350,17 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::LinearAlgebra.Dia
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator)}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d)
-
+    return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator)}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d, false)
 end
 
 
 function make_SE_update_function(sys::ControllableSystem)
     if sys.d_ls === nothing
-        return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
+        if sys.orthogonal_basis
+            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)))
+        else
+            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
+        end
     elseif typeof(sys.rotating_frame_generator) <: LinearAlgebra.Diagonal
         return (du,u,p,t)-> SE_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
     elseif sys.use_rotating_frame == false
