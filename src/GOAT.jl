@@ -180,6 +180,7 @@ function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Functi
                         dcjkdk_ = ∂c_func(p,t,j,k,k_)
                         du[l1j,n] += dcjkdk_*v1*um1n
                         du[l2j,n] += dcjkdk_*v2*um2n
+                    end
                 end
             end
             k+=1
