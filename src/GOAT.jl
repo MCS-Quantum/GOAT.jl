@@ -387,7 +387,11 @@ end
 
 function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vector{Int})
     if sys.d_ls === nothing
-        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
+        if sys.orthogonal_basis
+            return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)))
+        else
+            return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
+        end
     elseif typeof(sys.rotating_frame_generator) <: LinearAlgebra.Diagonal
         return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
     elseif sys.use_rotating_frame == false
