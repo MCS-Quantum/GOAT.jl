@@ -1,4 +1,4 @@
-using FFTW, Random
+using FFTW, Random, Printf
 
 
 """
@@ -58,3 +58,22 @@ function colored_noise(lf::Float64, hf::Float64, n::Int64, alpha::Float64, seed:
     phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
     return amps, freqs, phases
 end 
+
+function test_derivatives(sys, opt_param_inds, p_test; dh=1e-8, tol=1e-3)
+    num_basis_funcs = size(sys.c_ls,1)
+    p = similar(p_test)
+    for j in opt_param_inds
+        for i in 1:num_basis_funcs
+            p .= p_test
+            c = sys.coefficient_func(p,1.0,i)
+            ∂c = sys.∂coefficient_func(p,1.0,i,j)
+            p[j] += dh
+            dc = sys.coefficient_func(p,1.0,i)
+            ∂c_FD = (dc-c)/dh
+            diff = abs(∂c_FD - ∂c)
+            strdiff = @sprintf "%.5e" diff
+            @assert diff <= tol "Error in basis $i parameter $j: $strdiff"
+        end
+    end
+    return println("All good")
+end

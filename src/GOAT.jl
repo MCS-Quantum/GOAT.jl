@@ -18,7 +18,7 @@ export fourier_coefficient, ∂fourier_coefficient, ∂gaussian_coefficient, gau
 
 include("Utilities.jl")
 export get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
-export colored_noise, time_domain_signal
+export colored_noise, time_domain_signal, test_derivatives
 
 function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func)
     d = size(u,2) # Dimension of unitary/Hamiltonian
