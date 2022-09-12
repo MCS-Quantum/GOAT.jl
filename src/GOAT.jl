@@ -151,23 +151,38 @@ function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Functi
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
-    for i in 1:num_basis_ops
-        c_ls_ = c_ls[i]
-        c_ms_ = c_ms[i]
-        c_vs_ = c_vs[i]
-        c = c_func(p,t,i)
-        for (m,l,v) in zip(c_ms_,c_ls_,c_vs_)
-            for n in 1:d
-                umn = u[m,n]
-                du[l,n] += c*v*umn
-                for (j,k) in enumerate(opt_param_inds)
-                    lj = j*d+l
-                    mj = j*d+m
-                    du[lj,n] += c*v*u[mj,n]
-                    dcdk = ∂c_func(p,t,i,k)
-                    du[lj,n] += dcdk*v*umn
+    for j in 1:d
+        k = 1
+        while k<=j
+            cjk = c_func(p,t,j,k)
+            ckj = conj(cjk)
+            q = linear_index[j,k]
+            r = linear_index[k,j]
+            c_ls_jk = c_ls[q]
+            c_ms_jk = c_ms[q]
+            c_vs_jk = c_vs[q]
+            c_ls_kj = c_ls[r]
+            c_ms_kj = c_ms[r]
+            c_vs_kj = c_vs[r]
+            for (m1,l1,v1, m2,l2,v2) in zip(c_ms_jk,c_ls_jk,c_vs_jk,c_ms_kj,c_ls_kj,c_vs_kj)
+                for n in 1:d
+                    um1n = u[m1,n]
+                    um2n = u[m2,n]
+                    du[l1,n] += cjk*v1*um1n
+                    du[l2,n] += ckj*v2*um2n
+                    for (j_,k_) in enumerate(opt_param_inds)
+                        l1j_ = j_*d+l1
+                        m1j_ = j_*d+m1
+                        l2j_ = j_*d+l2
+                        m2j_ = j_*d+m2
+                        du[l1j_,n] += cjk*v1*u[m1j_,n]
+                        du[l2j_,n] += ckj*v2*u[m2j_,n]
+                        dcjkdk_ = ∂c_func(p,t,j,k,k_)
+                        du[l1j,n] += dcjkdk_*v1*um1n
+                        du[l2j,n] += dcjkdk_*v2*um2n
                 end
             end
+            k+=1
         end
     end
     lmul!(-im, du)
