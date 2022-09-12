@@ -60,6 +60,7 @@ function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func, linear_index)
                     du[l2,n] += ckj*v2*u[m2,n]
                 end
             end
+            k+=1
         end
     end
     lmul!(-im, du)
