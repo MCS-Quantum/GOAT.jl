@@ -178,8 +178,8 @@ function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Functi
                         du[l1j_,n] += cjk*v1*u[m1j_,n]
                         du[l2j_,n] += ckj*v2*u[m2j_,n]
                         dcjkdk_ = ∂c_func(p,t,j,k,k_)
-                        du[l1j,n] += dcjkdk_*v1*um1n
-                        du[l2j,n] += dcjkdk_*v2*um2n
+                        du[l1j_,n] += dcjkdk_*v1*um1n
+                        du[l2j_,n] += dcjkdk_*v2*um2n
                     end
                 end
             end
