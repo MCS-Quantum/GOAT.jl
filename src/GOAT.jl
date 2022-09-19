@@ -302,6 +302,65 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     
 end
 
+function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, ∂c_func; sparse_tol = 1e-12)
+    d = size(drift_op,1)
+    F = RF_generator
+    N = size(basis_ops,1)
+    c_ls = []
+    c_ms = []
+    c_vs = []
+    as = F.values
+    a_diffs = zeros(ComplexF64,d,d)
+    aj_drift_aks = zeros(ComplexF64,d,d)
+    aj_hi_aks = zeros(ComplexF64,d,N,d)
+    for j in 1:d
+        for k in 1:d
+            aj = F.values[j]
+            ak = F.values[k]
+            a_diffs[j,k] = aj-ak
+            aj_vec = @view F.vectors[:,j]
+            ak_vec = @view F.vectors[:,k]
+            aj_drift_aks[j,k] = adjoint(aj_vec)*drift_op*ak_vec
+
+            new_basis_op = sparse(aj_vec*adjoint(ak_vec))
+            droptol!(new_basis_op,sparse_tol)
+            ls,ms,vs = findnz(new_basis_op)
+            push!(c_ls,ls)
+            push!(c_ms, ms)
+            push!(c_vs,vs)
+            for i in 1:N
+                aj_hi_aks[j,i,k] = adjoint(aj_vec)*basis_ops[i]*ak_vec
+            end
+        end
+    end
+    
+    function new_c_func(p,t,j,k)
+        c = 0.0+0.0im
+        diag_term = 0.0+0.0im
+        if j==k
+            diag_term = as[j]
+        end
+        for i in 1:N
+            c += c_func(p,t,i)*aj_hi_aks[j,i,k]
+        end
+        adiff = a_diffs[j,k]
+        aj_drift_ak = aj_drift_aks[j,k]
+        return exp(im*t*adiff)*(aj_drift_ak+c+diag_term)
+    end
+
+    function new_∂c_func(p,t,j,k,m)
+        c = 0.0+0.0im
+        for i in 1:N
+            c += ∂c_func(p,t,i,m)*aj_hi_aks[j,i,k]
+        end
+        adiff = a_diffs[j,k]
+        return exp(im*t*adiff)*c
+    end
+
+    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true)
+end
+
+
 function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, ∂c_func; sparse_tol = 1e-12)
     d = size(drift_op,1)
     F = eigen(RF_generator)
