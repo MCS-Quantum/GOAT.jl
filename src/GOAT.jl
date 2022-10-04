@@ -302,6 +302,17 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     
 end
 
+function ControllableSystem(drift_op, basis_ops, c_func)
+    ∂c_func(t) = 0
+    d_ls,d_ms,d_vs = findnz(drift_op)
+    d = size(drift_op,1)
+    c_ls = [findnz(op)[1] for op in basis_ops]
+    c_ms = [findnz(op)[2] for op in basis_ops]
+    c_vs = [findnz(op)[3] for op in basis_ops]
+    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false)
+    
+end
+
 function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, ∂c_func; sparse_tol = 1e-12)
     d = size(drift_op,1)
     F = RF_generator
