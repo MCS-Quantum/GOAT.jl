@@ -20,7 +20,7 @@ include("Utilities.jl")
 export get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
 export colored_noise, time_domain_signal, test_derivatives
 
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function)
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -38,7 +38,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     for j in iter_js
@@ -67,7 +67,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64},c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function)
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Vector{Int64}},d_ls::Vector{Vector{Int64}},d_vs::Vector{Vector{ComplexF64}},c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -89,7 +89,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64},c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function, A::Diagonal, B::Diagonal)
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Vector{Int64}},d_ls::Vector{Vector{Int64}},d_vs::Vector{Vector{ComplexF64}},c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, A::Diagonal, B::Diagonal)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -148,7 +148,7 @@ function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Functi
     lmul!(-im, du)
 end
 
-function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
+function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     for j in iter_js
@@ -190,7 +190,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
     lmul!(-im, du)
 end
 
-function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64}, c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
+function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Vector{Int64}},d_ls::Vector{Vector{Int64}},d_vs::Vector{Vector{ComplexF64}}, c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -226,7 +226,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
     lmul!(-im, du)
 end
 
-function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64}, c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
+function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Vector{Int64}},d_ls::Vector{Vector{Int64}},d_vs::Vector{Vector{ComplexF64}}, c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
