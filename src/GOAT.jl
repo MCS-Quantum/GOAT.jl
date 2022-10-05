@@ -38,12 +38,14 @@ function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func)
     lmul!(-im, du)
 end
 
-function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func, linear_index)
+function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func, linear_index, iter_ks, iter_js)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
-    for j in 1:d
-        k = 1
-        while k<=j
+    for j in iter_js
+        for k in iter_ks
+            if k>j
+                continue
+            end
             cjk = c_func(p,t,j,k)
             ckj = conj(cjk)
             q = linear_index[j,k]
@@ -147,13 +149,14 @@ function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Functi
     lmul!(-im, du)
 end
 
-function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function, linear_index)
+function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function, linear_index, iter_ks, iter_js)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
-    num_basis_ops = size(c_ms,1)
-    for j in 1:d
-        k = 1
-        while k<=j
+    for j in iter_js
+        for k in iter_ks
+            if k>j
+                continue
+            end
             cjk = c_func(p,t,j,k)
             ckj = conj(cjk)
             q = linear_index[j,k]
@@ -478,7 +481,7 @@ end
 function make_SE_update_function(sys::ControllableSystem)
     if sys.d_ls === nothing
         if sys.orthogonal_basis
-            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)))
+            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)),sys.iter_ks, sys.iter_js)
         else
             return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
         end
@@ -492,7 +495,7 @@ end
 function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vector{Int})
     if sys.d_ls === nothing
         if sys.orthogonal_basis
-            return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)))
+            return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)),sys.iter_ks, sys.iter_js)
         else
             return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
         end
