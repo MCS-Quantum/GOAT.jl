@@ -277,7 +277,7 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_in
     lmul!(-im, du)
 end
 
-struct ControllableSystem{A,B,C,D,E,F,G,H}
+struct ControllableSystem{A,B,C,D,E,F,G}
     d_ms::A
     d_ls::A
     d_vs::B
@@ -293,7 +293,6 @@ struct ControllableSystem{A,B,C,D,E,F,G,H}
     orthogonal_basis::Bool
     iter_ks::F
     iter_js::G
-    iter_is::H
 end
 
 
@@ -389,7 +388,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
         return exp(im*t*adiff)*c
     end
 
-    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, iter_ks,iter_js,iter_is)
+    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing, typeof(iter_ks), typeof(iter_js)}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, iter_ks,iter_js)
 end
 
 
@@ -464,7 +463,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
         return exp(im*t*adiff)*c
     end
 
-    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, iter_ks,iter_js,iter_is)
+    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing, typeof(iter_ks), typeof(iter_js)}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, iter_ks,iter_js)
 end
 
 
