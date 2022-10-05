@@ -122,7 +122,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
-function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function)
+function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -345,7 +345,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
                 aj_hi_ak = adjoint(aj_vec)*basis_ops[i]*ak_vec
                 aj_hi_aks[j,i,k] = aj_hi_ak
                 small_control_overlap = abs2(aj_hi_ak) <= sparse_tol
-                if small_control_overlap && small_drift_overlap && sparse_tol>0.0
+                if small_control_overlap && small_drift_overlap
                     continue # We won't access or use the basis operator given by |a_j⟩⟨a_k| 
                     # because the original Hamiltonian does not have siginificant support on this basis element
                 else
