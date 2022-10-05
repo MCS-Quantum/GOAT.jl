@@ -20,7 +20,7 @@ include("Utilities.jl")
 export get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
 export colored_noise, time_domain_signal, test_derivatives
 
-function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func)
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -38,7 +38,7 @@ function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func)
     lmul!(-im, du)
 end
 
-function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func, linear_index, iter_ks, iter_js)
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     for j in iter_js
@@ -62,13 +62,12 @@ function SE_action(du,u,p,t,c_ms,c_ls,c_vs,c_func, linear_index, iter_ks, iter_j
                     du[l2,n] += ckj*v2*u[m2,n]
                 end
             end
-            k+=1
         end
     end
     lmul!(-im, du)
 end
 
-function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func)
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64},c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -90,7 +89,7 @@ function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func)
     lmul!(-im, du)
 end
 
-function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func, A::Diagonal, B::Diagonal)
+function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64},c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64},c_func::Function, A::Diagonal, B::Diagonal)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -116,7 +115,7 @@ function SE_action(du,u,p,t,d_ms,d_ls,d_vs,c_ms,c_ls,c_vs,c_func, A::Diagonal, B
                 Bll = B[l,l]
                 Bmm = conj(B[m,m])
                 umn = u[m,n]
-                du[l,n] += c*v*u[m,n]*Bll*Bmm
+                du[l,n] += c*v*umn*Bll*Bmm
             end
         end     
     end
@@ -149,7 +148,7 @@ function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Functi
     lmul!(-im, du)
 end
 
-function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function, linear_index, iter_ks, iter_js)
+function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     for j in iter_js
@@ -186,13 +185,12 @@ function GOAT_action(du, u, p, t, c_ms,c_ls,c_vs, opt_param_inds, c_func::Functi
                     end
                 end
             end
-            k+=1
         end
     end
     lmul!(-im, du)
 end
 
-function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function)
+function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64}, c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -228,7 +226,7 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_in
     lmul!(-im, du)
 end
 
-function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_inds, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
+function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{Int64}, c_ms::Vector{Int64},c_ls::Vector{Int64},c_vs::Vector{Int64}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -302,7 +300,7 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing, Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false, nothing, nothing, nothing)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false, nothing, nothing)
     
 end
 
@@ -313,7 +311,7 @@ function ControllableSystem(drift_op, basis_ops, c_func)
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing, Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false, nothing, nothing, nothing)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false, nothing, nothing)
     
 end
 
@@ -328,9 +326,8 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
     a_diffs = zeros(ComplexF64,d,d)
     aj_drift_aks = zeros(ComplexF64,d,d)
     aj_hi_aks = zeros(ComplexF64,d,N,d)
-    iter_ks = []
-    iter_js = []
-    iter_is = []
+    iter_ks = Int64[]
+    iter_js = Int64[]
     for j in 1:d
         for k in 1:d
             aj = F.values[j]
@@ -348,13 +345,12 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
                 aj_hi_ak = adjoint(aj_vec)*basis_ops[i]*ak_vec
                 aj_hi_aks[j,i,k] = aj_hi_ak
                 small_control_overlap = abs2(aj_hi_ak) <= sparse_tol
-                if small_control_overlap && small_drift_overlap
+                if small_control_overlap && small_drift_overlap && sparse_tol>0.0
                     continue # We won't access or use the basis operator given by |a_j⟩⟨a_k| 
                     # because the original Hamiltonian does not have siginificant support on this basis element
                 else
                     push!(iter_js,j)
                     push!(iter_ks,k)
-                    push!(iter_is,i)
                 end
             end
 
@@ -403,9 +399,8 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
     a_diffs = zeros(ComplexF64,d,d)
     aj_drift_aks = zeros(ComplexF64,d,d)
     aj_hi_aks = zeros(ComplexF64,d,N,d)
-    iter_ks = []
-    iter_js = []
-    iter_is = []
+    iter_ks = Int64[]
+    iter_js = Int64[]
     for j in 1:d
         for k in 1:d
             aj = F.values[j]
@@ -429,7 +424,6 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
                 else
                     push!(iter_js,j)
                     push!(iter_ks,k)
-                    push!(iter_is,i)
                 end
             end
 
@@ -473,14 +467,14 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::LinearAlgebra.Dia
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator), Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d, false, nothing, nothing, nothing)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator), Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d, false, nothing, nothing)
 end
 
 
 function make_SE_update_function(sys::ControllableSystem)
     if sys.d_ls === nothing
         if sys.orthogonal_basis
-            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)),sys.iter_ks, sys.iter_js)
+            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)), sys.iter_ks, sys.iter_js)
         else
             return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
         end
