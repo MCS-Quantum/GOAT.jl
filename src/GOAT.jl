@@ -271,11 +271,10 @@ function GOAT_action(du, u, p, t, d_ms, d_ls, d_vs, c_ms,c_ls,c_vs, opt_param_in
             end
         end     
     end
-    
     lmul!(-im, du)
 end
 
-struct ControllableSystem{A,B,C,D,E}
+struct ControllableSystem{A,B,C,D,E,F,G,H}
     d_ms::A
     d_ls::A
     d_vs::B
@@ -289,6 +288,9 @@ struct ControllableSystem{A,B,C,D,E}
     use_rotating_frame::Bool
     dim::Int64
     orthogonal_basis::Bool
+    iter_ks::F
+    iter_js::G
+    iter_is::H
 end
 
 
@@ -298,7 +300,7 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing, Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false, nothing, nothing, nothing)
     
 end
 
@@ -309,7 +311,7 @@ function ControllableSystem(drift_op, basis_ops, c_func)
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs), typeof(c_func), typeof(∂c_func), Nothing, Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, nothing, nothing, false, d, false, nothing, nothing, nothing)
     
 end
 
@@ -324,6 +326,9 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
     a_diffs = zeros(ComplexF64,d,d)
     aj_drift_aks = zeros(ComplexF64,d,d)
     aj_hi_aks = zeros(ComplexF64,d,N,d)
+    iter_ks = []
+    iter_js = []
+    iter_is = []
     for j in 1:d
         for k in 1:d
             aj = F.values[j]
@@ -331,17 +336,30 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
             a_diffs[j,k] = aj-ak
             aj_vec = @view F.vectors[:,j]
             ak_vec = @view F.vectors[:,k]
-            aj_drift_aks[j,k] = adjoint(aj_vec)*drift_op*ak_vec
+            aj_drift_ak = adjoint(aj_vec)*drift_op*ak_vec
+            aj_drift_aks[j,k] = aj_drift_ak
+            small_drift_overlap = abs2(aj_drift_ak) <= sparse_tol
 
             new_basis_op = sparse(aj_vec*adjoint(ak_vec))
             droptol!(new_basis_op,sparse_tol)
+            for i in 1:N
+                aj_hi_ak = adjoint(aj_vec)*basis_ops[i]*ak_vec
+                aj_hi_aks[j,i,k] = aj_hi_ak
+                small_control_overlap = abs2(aj_hi_ak) <= sparse_tol
+                if small_control_overlap && small_drift_overlap
+                    continue # We won't access or use the basis operator given by |a_j⟩⟨a_k| 
+                    # because the original Hamiltonian does not have siginificant support on this basis element
+                else
+                    push!(iter_js,j)
+                    push!(iter_ks,k)
+                    push!(iter_is,i)
+                end
+            end
+
             ls,ms,vs = findnz(new_basis_op)
             push!(c_ls,ls)
             push!(c_ms, ms)
             push!(c_vs,vs)
-            for i in 1:N
-                aj_hi_aks[j,i,k] = adjoint(aj_vec)*basis_ops[i]*ak_vec
-            end
         end
     end
     
@@ -368,7 +386,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
         return exp(im*t*adiff)*c
     end
 
-    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true)
+    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, iter_ks,iter_js,iter_is)
 end
 
 
@@ -383,6 +401,9 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
     a_diffs = zeros(ComplexF64,d,d)
     aj_drift_aks = zeros(ComplexF64,d,d)
     aj_hi_aks = zeros(ComplexF64,d,N,d)
+    iter_ks = []
+    iter_js = []
+    iter_is = []
     for j in 1:d
         for k in 1:d
             aj = F.values[j]
@@ -390,17 +411,30 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
             a_diffs[j,k] = aj-ak
             aj_vec = @view F.vectors[:,j]
             ak_vec = @view F.vectors[:,k]
-            aj_drift_aks[j,k] = adjoint(aj_vec)*drift_op*ak_vec
+            aj_drift_ak = adjoint(aj_vec)*drift_op*ak_vec
+            aj_drift_aks[j,k] = aj_drift_ak
+            small_drift_overlap = abs2(aj_drift_ak) <= sparse_tol
 
             new_basis_op = sparse(aj_vec*adjoint(ak_vec))
             droptol!(new_basis_op,sparse_tol)
+            for i in 1:N
+                aj_hi_ak = adjoint(aj_vec)*basis_ops[i]*ak_vec
+                aj_hi_aks[j,i,k] = aj_hi_ak
+                small_control_overlap = abs2(aj_hi_ak) <= sparse_tol
+                if small_control_overlap && small_drift_overlap
+                    continue # We won't access or use the basis operator given by |a_j⟩⟨a_k| 
+                    # because the original Hamiltonian does not have siginificant support on this basis element
+                else
+                    push!(iter_js,j)
+                    push!(iter_ks,k)
+                    push!(iter_is,i)
+                end
+            end
+
             ls,ms,vs = findnz(new_basis_op)
             push!(c_ls,ls)
             push!(c_ms, ms)
             push!(c_vs,vs)
-            for i in 1:N
-                aj_hi_aks[j,i,k] = adjoint(aj_vec)*basis_ops[i]*ak_vec
-            end
         end
     end
     
@@ -427,7 +461,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
         return exp(im*t*adiff)*c
     end
 
-    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true)
+    return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, iter_ks,iter_js,iter_is)
 end
 
 
@@ -437,7 +471,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::LinearAlgebra.Dia
     c_ls = [findnz(op)[1] for op in basis_ops]
     c_ms = [findnz(op)[2] for op in basis_ops]
     c_vs = [findnz(op)[3] for op in basis_ops]
-    return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator)}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d, false)
+    return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator), Nothing, Nothing, Nothing}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d, false, nothing, nothing, nothing)
 end
 
 
