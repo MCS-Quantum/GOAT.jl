@@ -41,26 +41,24 @@ end
 function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
-    for j in iter_js
-        for k in iter_ks
-            if k>j
-                continue
-            end
-            cjk = c_func(p,t,j,k)
-            ckj = conj(cjk)
-            q = linear_index[j,k]
-            r = linear_index[k,j]
-            c_ls_jk = c_ls[q]
-            c_ms_jk = c_ms[q]
-            c_vs_jk = c_vs[q]
-            c_ls_kj = c_ls[r]
-            c_ms_kj = c_ms[r]
-            c_vs_kj = c_vs[r]
-            for (m1,l1,v1, m2,l2,v2) in zip(c_ms_jk,c_ls_jk,c_vs_jk,c_ms_kj,c_ls_kj,c_vs_kj)
-                for n in 1:d
-                    du[l1,n] += cjk*v1*u[m1,n]
-                    du[l2,n] += ckj*v2*u[m2,n]
-                end
+    for (j,k) in zip(iter_js,iter_ks)
+        if k>j
+            continue
+        end
+        cjk = c_func(p,t,j,k)
+        ckj = conj(cjk)
+        q = linear_index[j,k]
+        r = linear_index[k,j]
+        c_ls_jk = c_ls[q]
+        c_ms_jk = c_ms[q]
+        c_vs_jk = c_vs[q]
+        c_ls_kj = c_ls[r]
+        c_ms_kj = c_ms[r]
+        c_vs_kj = c_vs[r]
+        for (m1,l1,v1, m2,l2,v2) in zip(c_ms_jk,c_ls_jk,c_vs_jk,c_ms_kj,c_ls_kj,c_vs_kj)
+            for n in 1:d
+                du[l1,n] += cjk*v1*u[m1,n]
+                du[l2,n] += ckj*v2*u[m2,n]
             end
         end
     end
@@ -151,38 +149,36 @@ end
 function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, linear_index::LinearIndices, iter_ks::Vector{Int64}, iter_js::Vector{Int64})
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
-    for j in iter_js
-        for k in iter_ks
-            if k>j
-                continue
-            end
-            cjk = c_func(p,t,j,k)
-            ckj = conj(cjk)
-            q = linear_index[j,k]
-            r = linear_index[k,j]
-            c_ls_jk = c_ls[q]
-            c_ms_jk = c_ms[q]
-            c_vs_jk = c_vs[q]
-            c_ls_kj = c_ls[r]
-            c_ms_kj = c_ms[r]
-            c_vs_kj = c_vs[r]
-            for (m1,l1,v1, m2,l2,v2) in zip(c_ms_jk,c_ls_jk,c_vs_jk,c_ms_kj,c_ls_kj,c_vs_kj)
-                for n in 1:d
-                    um1n = u[m1,n]
-                    um2n = u[m2,n]
-                    du[l1,n] += cjk*v1*um1n
-                    du[l2,n] += ckj*v2*um2n
-                    for (j_,k_) in enumerate(opt_param_inds)
-                        l1j_ = j_*d+l1
-                        m1j_ = j_*d+m1
-                        l2j_ = j_*d+l2
-                        m2j_ = j_*d+m2
-                        du[l1j_,n] += cjk*v1*u[m1j_,n]
-                        du[l2j_,n] += ckj*v2*u[m2j_,n]
-                        dcjkdk_ = ∂c_func(p,t,j,k,k_)
-                        du[l1j_,n] += dcjkdk_*v1*um1n
-                        du[l2j_,n] += dcjkdk_*v2*um2n
-                    end
+    for (j,k) in zip(iter_js,iter_ks)
+        if k>j
+            continue
+        end
+        cjk = c_func(p,t,j,k)
+        ckj = conj(cjk)
+        q = linear_index[j,k]
+        r = linear_index[k,j]
+        c_ls_jk = c_ls[q]
+        c_ms_jk = c_ms[q]
+        c_vs_jk = c_vs[q]
+        c_ls_kj = c_ls[r]
+        c_ms_kj = c_ms[r]
+        c_vs_kj = c_vs[r]
+        for (m1,l1,v1, m2,l2,v2) in zip(c_ms_jk,c_ls_jk,c_vs_jk,c_ms_kj,c_ls_kj,c_vs_kj)
+            for n in 1:d
+                um1n = u[m1,n]
+                um2n = u[m2,n]
+                du[l1,n] += cjk*v1*um1n
+                du[l2,n] += ckj*v2*um2n
+                for (j_,k_) in enumerate(opt_param_inds)
+                    l1j_ = j_*d+l1
+                    m1j_ = j_*d+m1
+                    l2j_ = j_*d+l2
+                    m2j_ = j_*d+m2
+                    du[l1j_,n] += cjk*v1*u[m1j_,n]
+                    du[l2j_,n] += ckj*v2*u[m2j_,n]
+                    dcjkdk_ = ∂c_func(p,t,j,k,k_)
+                    du[l1j_,n] += dcjkdk_*v1*um1n
+                    du[l2j_,n] += dcjkdk_*v2*um2n
                 end
             end
         end
