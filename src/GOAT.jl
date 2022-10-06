@@ -46,6 +46,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
         while k<=j
             cjk = c_func(p,t,j,k)
             if abs2(cjk)<=tol
+                k+=1
                 continue
             end
             ckj = conj(cjk)
@@ -158,6 +159,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
         while k<=j
             cjk = c_func(p,t,j,k)
             if abs2(cjk)<tol
+                k+=1
                 continue
             end
             ckj = conj(cjk)
