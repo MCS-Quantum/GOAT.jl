@@ -18,7 +18,7 @@ function get_sinusoidal_coefficients_from_FFT(ts, s)
     ak[1] = ak[1]/2
     phi_k = atan.(bk./ak)
     Ak = ak ./ cos.(phi_k)
-    return Ak, freqs[1:size(Ak,1)], -phi_k
+    return Ak, freqs[1:size(Ak,1)]./2pi, -phi_k./2pi
 end
 
 
