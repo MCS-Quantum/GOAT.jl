@@ -97,7 +97,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
     for i in 1:d
-        B[i,i] = exp(-im*t*A[i,i])
+        B[i,i] = cis(-t*A[i,i])
     end
     
     for n in 1:d
@@ -239,7 +239,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
     num_params = size(opt_param_inds,1)
     
     for i in 1:d
-        B[i,i] = exp(-im*t*A[i,i])
+        B[i,i] = cis(-t*A[i,i])
     end
     
     for n in 1:d      
@@ -366,7 +366,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
         end
         adiff = a_diffs[j,k]
         aj_drift_ak = aj_drift_aks[j,k]
-        return exp(im*t*adiff)*(aj_drift_ak+c+diag_term)
+        return cis(t*adiff)*(aj_drift_ak+c+diag_term)
     end
 
     function new_∂c_func(p,t,j,k,m)
@@ -375,7 +375,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
             c += ∂c_func(p,t,i,m)*aj_hi_aks[j,i,k]
         end
         adiff = a_diffs[j,k]
-        return exp(im*t*adiff)*c
+        return cis(t*adiff)*c
     end
 
     return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, sparse_tol)
@@ -428,7 +428,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
         end
         adiff = a_diffs[j,k]
         aj_drift_ak = aj_drift_aks[j,k]
-        return exp(im*t*adiff)*(aj_drift_ak+c+diag_term)
+        return cis(t*adiff)*(aj_drift_ak+c+diag_term)
     end
 
     function new_∂c_func(p,t,j,k,m)
@@ -437,7 +437,7 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
             c += ∂c_func(p,t,i,m)*aj_hi_aks[j,i,k]
         end
         adiff = a_diffs[j,k]
-        return exp(im*t*adiff)*c
+        return cis(t*adiff)*c
     end
 
     return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, sparse_tol)
