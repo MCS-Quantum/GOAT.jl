@@ -38,6 +38,11 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
+"""
+    SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
+
+TBW
+"""
 function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
@@ -519,7 +524,7 @@ struct QOCProblem
     control_time::Float64
 end
 
-QOCProblem(target, control_time, Pc, Pa) = QOCProblem(Pc, Int(tr(Pc)), Pa, Int(tr(Pa)), target, control_time)
+QOCProblem(target, control_time, Pc, Pa) = QOCProblem(Pc, Int(round(tr(Pc))), Pa, Int(round(tr(Pa))), target, control_time)
 
 function GOAT_infidelity_reduce_map(sys::ControllableSystem,prob::QOCProblem,goat_sol)
     d = sys.dim    
