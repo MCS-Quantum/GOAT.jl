@@ -29,6 +29,25 @@ function general_logistic(t, lower, upper, slope, start=1e3, nu=1.0, C=1)
     return A + (K-A)/((C+Q*exp(-B*t))^(1/nu))
 end
 
+"""
+    flat_top_cosine(t, A, tp, tr)
+
+A flat-top cosine function which a constant amplitude of A for a time of tp 
+and a rise/fall time of tr with a cosine-shaped rise/fall.
+"""
+function flat_top_cosine(t, A, tp, tr)
+    if t<=tr
+        e = 0.5*A*(1-cos(pi*t/tr))
+        return e
+    elseif t>=(tp-tr)
+        e = 0.5*A*(1-cos(pi*(tp-t)/tr))
+        return e
+    else
+        e = A
+        return e
+    end
+end
+
 
 """
 A windowing function based on a product of two generalized logistic functions. 

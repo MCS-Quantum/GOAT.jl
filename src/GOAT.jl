@@ -12,7 +12,7 @@ include("ObjectiveFunctions.jl")
 export g_sm, ∂g_sm, h_sm, ∂h_sm
 
 include("Ansatze.jl")
-export window, S, general_logistic, dSdx, LO, gaussian_kernel
+export window, S, general_logistic, dSdx, LO, gaussian_kernel, flat_top_cosine
 export sinusoid_kernel, morlet_kernel
 export fourier_coefficient, ∂fourier_coefficient, ∂gaussian_coefficient, gaussian_coefficient, poly_coefficient, ∂poly_coefficient
 
