@@ -87,5 +87,5 @@ function test_derivatives(sys, prob, opt_param_inds, p_test; dh=1e-8, tol=1e-5, 
             #println("Gradient acceptable for parameter $j of basis $i")
         end
     end
-    return println("All good")
+    return println("Derivatives are all good")
 end
