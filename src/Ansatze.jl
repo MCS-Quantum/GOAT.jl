@@ -30,17 +30,18 @@ function general_logistic(t, lower, upper, slope, start=1e3, nu=1.0, C=1)
 end
 
 """
-    flat_top_cosine(t, A, tp, tr)
+    flat_top_cosine(t, A, T, tr)
 
-A flat-top cosine function which a constant amplitude of A for a time of tp 
+A flat-top cosine function with duration T
 and a rise/fall time of tr with a cosine-shaped rise/fall.
+
 """
-function flat_top_cosine(t, A, tp, tr)
+function flat_top_cosine(t, A, T, tr)
     if t<=tr
         e = 0.5*A*(1-cos(pi*t/tr))
         return e
-    elseif t>=(tp-tr)
-        e = 0.5*A*(1-cos(pi*(tp-t)/tr))
+    elseif t>=(T-tr)
+        e = 0.5*A*(1-cos(pi*(T-t)/tr))
         return e
     else
         e = A
