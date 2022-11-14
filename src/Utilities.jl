@@ -5,6 +5,8 @@ using FFTW, Random, Printf
     get_sinusoidal_coefficients_from_FFT(ts, s)
 
 Compute the sinusoidal amplitude-phase coefficients and frequencies from FFT of the signal s with timeseries ts. 
+
+Output: Amps, freqs, phases
 """
 function get_sinusoidal_coefficients_from_FFT(ts, s)
     P = ts[end]
@@ -23,12 +25,12 @@ end
 
 
 """
-    truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
+    truncated_inv_fft(t, Aks, freqs, phi_ks ; N=nothing)
 
 Compute the signal at time t defined by the sinusoidal amplitude-phase coefficients and FFT frequencies truncated
 to the N frequency components with largest magnitude.
 """
-function truncated_inv_fft(t, Aks, phi_ks, freqs ; N=nothing)
+function truncated_inv_fft(t, Aks, freqs, phi_ks ; N=nothing)
     c = 0.0
     if N === nothing
         for (Ak, phi_k, f) in zip(Aks, phi_ks, freqs)
