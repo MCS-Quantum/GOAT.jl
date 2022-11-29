@@ -11,9 +11,9 @@ end
 """
 Morlet wavelet kernel (although not a true wavelet because it is not normalized):
 
-morlet_kernel(t,a, mu, sigma, w, phi)
+morlet_kernel(t, a, mu, sigma, w, phi)
 """
-function morlet_kernel(t,a, mu, sigma, w, phi)
+function morlet_kernel(t, a, mu, sigma, w, phi)
     return a*exp(-0.5*( (t-mu) / sigma)^2)*sin(w*t+phi)
 end
 
