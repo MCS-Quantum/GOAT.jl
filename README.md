@@ -22,10 +22,10 @@ $$
 
 The task of optimal control is to determine a set of control parameters $\vec{\alpha}^*$ and a control time $T^*$ such that the system's evolution $U(\vec{\alpha}^*, T^*)$ approximates a desired unitary evolution $U_{target}$. 
 
-The GOAT algorithm assumes that the each control function is described as a discrete sum of a set of parametrized basis functions. This is a rather general definition but one example may be the weighted sum of some orthogonal function basis (like a polynomial basis or Fourier basis):
+The GOAT algorithm assumes that the each control function is described as a combination of a set of parametrized basis functions. This is a rather general definition and many choices for this decomposition can be made. Referred to as an *ansatz*, the choice of decomposition is typically informed by experimental considerations. One example is the expansion of each control function within an orthogonal function basis (like a polynomial basis or Fourier basis):
 
 $$
-c_i(\vec{\alpha},t) = \sum_n^N \alpha_n f_n(t)
+c_i(\vec{\alpha},t) = \sum_n^N \alpha_n f_n(t).
 $$
 
 While this optimization can be performed using gradient-free methods, optimization algorithms that utilize information about the gradient of the objective function w.r.t. the control parameters can yield much faster optimization. 
@@ -77,18 +77,26 @@ This coupled differential equation is referred to as the GOAT Equations of Motio
 
 First, it depends only on a single parameter $\alpha_n$ thus, computing the gradient can be obtained through parallelization, solving a seperate GOAT EOM for each parameter to be optimized. 
 
-Second, action of the differential equation is repetitive: the upper triangle of the matrix is $0$ and the diagonal of the matrix is $H(\vec{\alpha},t)$. Thus, storing this matrix, even in a sparse form is inefficient. Not only that, the Hamiltonians of most physically realizable quantum systems are sparse which suggests that instantiating the action of the EOMs is not efficient in general. 
+Second, the action of the differential equation is highly structured: the upper triangle of the matrix is $0$ and the diagonal of the matrix is $H(\vec{\alpha},t)$. Thus, storing this matrix, even in a sparse form is inefficient. Not only that, but the Hamiltonians of most physically realizable quantum systems are sparse which suggests that instantiating the action of the EOMs is not efficient in general. 
 
-Thus, this package specializes on these structures to implement parallelized, matrix-free solutions of the GOAT EOMs to optimize performance. More details will be discussed further. 
+Thus, this package specializes on these structures to implement parallelized, matrix-free implementations of the GOAT EOMs to optimize performance.
 
-## Package structure
+## Package structure and use
 
-The main functionality of this package is centered on two main data structures, the`ControllableSystem` and the `QOCProblem` and a set of methods for these data structures to solve optimal control tasks.
+The GOAT.jl package aims to provide an all-in-one implementation of GOAT for users within the fields of quantum physics and quantum computation. This means that a user can specify a controllable quantum system, a quantum optimal control problem, a control ansatz, and perform optimization. 
 
-There are in essence two Based on these structures, we produce matrix-free functions that compute the action of the GOAT EOMs:
+The main functionality of this package is centered on two data structures, the `ControllableSystem` and the `QOCProblem`.  Once these structures are instantiated GOAT.jl provides a number of methods to iteratively solve the GOAT EOMs (via [DifferentialEquations.jl](https://diffeq.sciml.ai/stable/)) and determine controls through optimization (via [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/)).
+
+However, one does not need to use DifferentialEquations.jl or Optim.jl. At it's core, GOAT.jl uses a `ControllableSystem` struct to generate efficient functions for the [in-place](https://diffeq.sciml.ai/stable/basics/problem/#In-place-vs-Out-of-Place-Function-Definition-Forms) definition of a differential equation. For more details on utilizing custom optimization or numerical integration please see the examples. 
+
+While not a direct dependency, the authors recommend using the [QuantumOptics.jl](https://qojulia.org/) to model the details of the quantum system (vectors/operators used in the computation). At the moment, GOAT.jl does not have methods that accept operator types from QuantumOptics.jl, but we do plan to add this functionality in the future. 
+
+## Example 1: Optimizing a gaussian pulse for a single qubit
+
+This is perhaps the simplest example of a quantum optimal control problem. The task is to determine a the amplitude of a Guassian-shaped pulse such that 
+
+## Example 2: Optimizing a custom pulse-ansatz for a transmon using QuantumOptics.jl
 
 
-## Dependencies
 
-This project uses [DifferentialEquations.jl](https://diffeq.sciml.ai/stable/) to solve the GOAT EOMsa
 
