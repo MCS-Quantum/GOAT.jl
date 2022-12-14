@@ -244,7 +244,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
     num_params = size(opt_param_inds,1)
     
     for i in 1:d
-        B[i,i] = cis(-t*A[i,i])
+        B[i,i] = cis(t*A[i,i])
     end
     
     for n in 1:d      

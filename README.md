@@ -73,11 +73,11 @@ U(\vec{\alpha},t)\\
 
 $$
 
-This coupled differential equation is referred to as the GOAT Equations of Motion (EOM). It has a significant amount of internal structure which is specialized on in this package for efficient computation.
+This coupled differential equation is referred to as the GOAT Equations of Motion (EOM). The initial conditions are $U(\vec{\alpha},0) = I$ and $\partial_{\alpha_n} U(\vec{\alpha},0) = 0~~\forall~~ \alpha_n$. It has a significant amount of internal structure which is specialized on in this package for efficient computation.
 
 First, it depends only on a single parameter $\alpha_n$ thus, computing the gradient can be obtained through parallelization, solving a seperate GOAT EOM for each parameter to be optimized. 
 
-Second, the action of the differential equation is highly structured: the upper triangle of the matrix is $0$ and the diagonal of the matrix is $H(\vec{\alpha},t)$. Thus, storing this matrix, even in a sparse form is inefficient. Not only that, but the Hamiltonians of most physically realizable quantum systems are sparse which suggests that instantiating the action of the EOMs is not efficient in general. 
+Second, the action of the differential equation is highly structured: the upper triangle of the matrix is $0$ and the diagonal of the matrix is $H(\vec{\alpha},t)$. Thus, storing this matrix. Not only that, but the Hamiltonians of most physically realizable quantum systems are sparse which suggests that instantiating the action of the EOMs is not efficient in general. 
 
 Thus, this package specializes on these structures to implement parallelized, matrix-free implementations of the GOAT EOMs to optimize performance.
 
@@ -93,7 +93,47 @@ While not a direct dependency, the authors recommend using the [QuantumOptics.jl
 
 ## Example 1: Optimizing a gaussian pulse for a single qubit
 
-This is perhaps the simplest example of a quantum optimal control problem. The task is to determine a the amplitude of a Guassian-shaped pulse such that 
+This is perhaps the simplest example of a quantum optimal control problem. The physical task is to invert a qubit's population from he ground state $\ket{0}$ to the orthogonal state $\ket{1}$.
+
+Given a qubit Hamiltonian 
+
+$$
+H(t) = \Omega(t) \frac{\sigma_x}{2}
+$$
+one can determine analytically that there are a family of pulses which will accomplish the control task if the following topoloical criteria is met:
+
+$$
+\int_0^t d\tau \Omega(\tau) = \pi
+$$
+
+one common choice of $\Omega(t)$ is a Gaussian function (due to an array of reasons outside the scope of this example). 
+
+For this example we will fix the mean and standard deviation of the Gaussian to $\mu=T/2$ and $\sigma = T/6$. Therefore, we must determine the amplitude of the Gaussian in order to satisfy the topological criteraia and create population inversion.
+
+The code to accomplish this is below:
+
+```julia
+using GOAT
+using LinearAlgebra # For instantiating necessary matrices
+using DifferentialEquations # Load algorithm options
+using Optim # Load algorithm options
+
+sigmaX = [0 1 ; 1 0] # The pauli X matrix
+
+basis_ops = [0.5*sigmaX]
+gauss(p,t,i) = gaussian_coefficient(p,t,i,1)
+∂gauss(p,t,i,l) = ∂gaussian_coefficient(p,t,i,l,1)
+
+U_target = deepcopy(sigmaX) # The target unitary: X|0> = |1>
+
+T = 10 # 10 time units
+p0 = [0.1,T/2,T/6] # The initial parameter guesses
+sys = ControllableSystem(basis_ops, gauss, ∂gauss)
+
+
+
+
+```
 
 ## Example 2: Optimizing a custom pulse-ansatz for a transmon using QuantumOptics.jl
 
