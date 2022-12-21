@@ -295,8 +295,8 @@ struct ControllableSystem{A,B,C,D,E}
     c_vs::Vector{Vector{ComplexF64}}
     coefficient_func::C
     ∂coefficient_func::D
-    rotating_frame_generator::E
-    rotating_frame_storage::E
+    reference_frame_generator::E
+    reference_frame_storage::E
     use_rotating_frame::Bool
     dim::Int64
     orthogonal_basis::Bool
@@ -466,8 +466,8 @@ function make_SE_update_function(sys::ControllableSystem)
         else
             return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
         end
-    elseif typeof(sys.rotating_frame_generator) <: LinearAlgebra.Diagonal
-        return (du,u,p,t)-> SE_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
+    elseif typeof(sys.reference_frame_generator) <: LinearAlgebra.Diagonal
+        return (du,u,p,t)-> SE_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, sys.reference_frame_generator, sys.reference_frame_storage)
     elseif sys.use_rotating_frame == false
         return (du,u,p,t)-> SE_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
     end
@@ -480,8 +480,8 @@ function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vect
         else
             return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
         end
-    elseif typeof(sys.rotating_frame_generator) <: LinearAlgebra.Diagonal
-        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.rotating_frame_generator, sys.rotating_frame_storage)
+    elseif typeof(sys.reference_frame_generator) <: LinearAlgebra.Diagonal
+        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.reference_frame_generator, sys.reference_frame_storage)
     elseif sys.use_rotating_frame == false
         return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
     end
