@@ -10,9 +10,9 @@ The task of unitary quantum optimal control is to determine a set of control par
 
 Specifically, the dynamics under the Hamiltonian
 
-$$
+```math
 H(\vec{\alpha},t)  = H_0 + \sum_i c_i(\vec{\alpha},t) H_i
-$$
+```
 
 generates a unitary evolution
 
