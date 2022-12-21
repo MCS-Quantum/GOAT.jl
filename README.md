@@ -93,7 +93,7 @@ However, one does not need to use DifferentialEquations.jl or Optim.jl. At it's 
 
 Within this package we also provide the support to define dynamical reference frames. A choice of reference frame (sometimes called an "rotating frame" or an "interaction picture") is a mathematical and physical utility used to simplify quantum dynamics. 
 
-A dynamical reference frame is defined by a Hermitian operator: $A$ (we currently only support time-independent reference frames but plan to add more functionality in the future). This operator may be derived from the system's Hamiltonian and is often chosen in such a way that the effective quantum dynamics within the reference frame is simplified. The most common example taught in contemporary quantum mechanics is known as the [interaction picture](https://en.wikipedia.org/wiki/Interaction_picture). 
+A dynamical reference frame is defined by a Hermitian operator: $`A`$ (we currently only support time-independent reference frames but plan to add more functionality in the future). This operator may be derived from the system's Hamiltonian and is often chosen in such a way that the effective quantum dynamics within the reference frame is simplified. The most common example taught in contemporary quantum mechanics is known as the [interaction picture](https://en.wikipedia.org/wiki/Interaction_picture). 
 
 However, the interaction picture is only a particular choice of refence frame! Many other references frames can be defined which are esspecially interesting or useful (See for example, the original [DRAG paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.103.110501) where a time-dependent reference frame is used to derive some of the most effective and common control pulses used today.)
 
