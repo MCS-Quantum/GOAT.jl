@@ -1,0 +1,10 @@
+
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Kairys
+    given-names: Paul
+    orcid: https://orcid.org/0000-0002-9203-9513
+title: "GOAT.jl -- Gradient Optimization of Analytic Controls in Julia"
+version: 0.1.0
+date-released: 2022-12-22
