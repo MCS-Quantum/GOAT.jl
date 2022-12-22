@@ -1,4 +1,4 @@
-# Gradient Optimization of Analytic Controls in Julia -- GOAT.jl
+# GOAT.jl -- Gradient Optimization of Analytic Controls in Julia 
 
 This project is a [Julia](https://julialang.org/) implementation of the Gradient Optimization of Analytic conTrols (GOAT) optimal control methodology proposed in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.150401) by Machnes et al.
 
@@ -8,7 +8,7 @@ The implementation only currently supports optimizing unitary evolution. Please 
 
 Please use the following citation for referencing this package:
 
-
+TBD
 
 
 ## Acknowledgement
