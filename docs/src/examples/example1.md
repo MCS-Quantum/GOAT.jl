@@ -5,7 +5,7 @@ This is perhaps the simplest example of a quantum optimal control problem. The p
 Given a qubit Hamiltonian 
 
 ```math
-H(t) = \frac{\omega}{2}\sigma_x + \Omega(t) \cos(\omega t)\sigma_x
+H(t) = \frac{\omega}{2}\sigma_z + \Omega(t) \cos(\omega t)\sigma_x
 ```
 
 one can determine analytically that there are a family of pulses which will accomplish the control task if the following topological criteria is met:
@@ -119,7 +119,7 @@ num_params_per_GOAT = 1
 
 This `num_params_per_GOAT` variable specifies how many derivatives are propogated in each GOAT EOMs and informs parallelization. 
 
-For example, if `num_params_per_GOAT=5`and there are 5 total parameters, then no parallelization is performed. In contrast, if `num_params_per_GOAT=2` and there are 5 total parameters, then 3 processes are run in parallel: the first processor computes the EOMs for 2 parameters, the second process computes the EOMs for 2 parameters, and the third computes the EOMs for 1 parameter. 
+For example, if `num_params_per_GOAT=5`and there are 5 total parameters, then no parallelization is performed. In contrast, if `num_params_per_GOAT=2` and the  re are 5 total parameters, then 3 processes are run in parallel: the first processor computes the EOMs for 2 parameters, the second process computes the EOMs for 2 parameters, and the third computes the EOMs for 1 parameter. 
 
 Finally we run our optimization
 
