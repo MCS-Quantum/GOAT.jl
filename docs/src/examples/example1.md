@@ -5,10 +5,10 @@ This is perhaps the simplest example of a quantum optimal control problem. The p
 Given a qubit Hamiltonian 
 
 ```math
-H(t) = \frac{\omega}{2}\sigma_z + \Omega(t) \cos(\omega t)\sigma_x
+H(t) = \frac{\omega}{2}\sigma_z + \Omega(t)\sigma_x
 ```
 
-one can determine analytically that there are a family of pulses which will accomplish the control task if the following topological criteria is met:
+one can determine analytically that there are a family of pulses which will accomplish the control task if the following criteria is met:
 
 ```math
 \int_0^t d\tau \Omega(\tau) = \pi
