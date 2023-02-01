@@ -1,6 +1,6 @@
 module GOAT
 
-using DifferentialEquations, SparseArrays, LinearAlgebra, Distributed, Optim
+using OrdinaryDiffEq, SparseArrays, LinearAlgebra, Distributed, Optim
 
 export SE_action, GOAT_action, ControllableSystem, ControllableSystem, make_SE_update_function
 export make_GOAT_update_function, solve_SE, solve_GOAT_eoms, make_GOAT_initial_state
