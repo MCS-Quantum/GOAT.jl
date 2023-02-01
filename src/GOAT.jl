@@ -496,8 +496,8 @@ function make_GOAT_initial_state(d,opt_param_inds)
     return u0
 end
 
-function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; args...)
-    tspan = (0.0, Tmax)
+function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; t0=0.0, args...)
+    tspan = (t0, Tmax)
     f = make_SE_update_function(sys)
     u0 = Matrix{ComplexF64}(I, sys.dim, sys.dim)
     prob = ODEProblem(f,u0, tspan, p)
@@ -506,8 +506,8 @@ function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; ar
 end
 
 
-function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; args...)
-    tspan = (0.0,Tmax)
+function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; t0=0.0, args...)
+    tspan = (t0,Tmax)
     g = make_GOAT_update_function(sys, opt_param_inds)
     u0 = make_GOAT_initial_state(sys.dim, opt_param_inds)
     prob = ODEProblem(g,u0,tspan,p)

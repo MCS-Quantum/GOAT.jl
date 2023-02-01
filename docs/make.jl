@@ -2,7 +2,7 @@ using Documenter
 using GOAT
 
 makedocs(
-    sitename = "GOAT",
+    sitename = "GOAT.jl",
     format = Documenter.HTML(),
     modules = [GOAT],
     pages = [
