@@ -1,7 +1,7 @@
 name = "GOAT"
 uuid = "7c88c5c5-82ab-4db3-870b-91186f03e5ce"
 authors = ["Paul Kairys <pkairys@anl.gov>"]
-version = "0.0.1"
+version = "0.0.2"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -16,4 +16,4 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 julia = "1.6"
-OrdinaryDiffEq = "6.40.1"
+OrdinaryDiffEq = "6.40.0"
