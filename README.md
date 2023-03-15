@@ -304,10 +304,3 @@ res = find_optimal_controls(p0, opt_param_inds,sys, prob,
 # The converged infidelity should be around 7e-4, higher fidelities are possible. Explore the ansatz, control time, and other parameters to find a better optimum!
 
 ```
-
-
-
-
-
-
-
