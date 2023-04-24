@@ -1,6 +1,8 @@
 # Gradient Optimization of Analytic Controls in Julia
 
-![GOAT_logo](/src/assets/logo.png "GOAT.jl Logo")
+<p align="center">
+<img class="GOAT_logo" width="300" height="300" src="https://github.com/MCS-Quantum/GOAT.jl/blob/main/docs/src/assets/logo.svg" alt="GOAT.jl Logo">
+</p>
 
 This project is a [Julia](https://julialang.org/) implementation of the Gradient Optimization of Analytic conTrols (GOAT) optimal control methodology proposed in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.150401) by Machnes et al.
 
@@ -22,7 +24,7 @@ generates a unitary evolution
 U(\vec{\alpha},t) = \mathcal{T}\exp \bigg[ \int_0^t d\tau H(\vec{\alpha},\tau) \bigg].
 ```
 
-The task of optimal control is to determine a set of control parameters $\vec{\alpha}^*$ and a control time $T^*$ such that the system's evolution $U(\vec{\alpha}^*, T^*)$ approximates a desired unitary evolution $U_{target}$. 
+The task of optimal control is to determine a set of control parameters $\vec{\alpha}^\*$ and a control time $T^\*$ such that the system's evolution $U(\vec{\alpha}^\*, T^\*)$ approximates a desired unitary evolution $U_{target}$. 
 
 The GOAT algorithm assumes that the each control function is described as a combination of a set of parametrized basis functions. This is a rather general definition and many choices for this decomposition can be made. Referred to as an *ansatz*, the choice of decomposition is typically informed by experimental considerations. One example is the expansion of each control function within an orthogonal function basis (like a polynomial basis or Fourier basis):
 
