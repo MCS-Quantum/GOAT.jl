@@ -1,6 +1,6 @@
 # Gradient Optimization of Analytic Controls in Julia
 
-![GOAT_logo](/src/assets/logo.svg "GOAT.jl Logo")
+![GOAT_logo](/src/assets/logo.png "GOAT.jl Logo")
 
 This project is a [Julia](https://julialang.org/) implementation of the Gradient Optimization of Analytic conTrols (GOAT) optimal control methodology proposed in [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.150401) by Machnes et al.
 
@@ -8,7 +8,7 @@ The implementation only currently supports optimizing unitary evolution.
 
 ## Overview of the GOAT method
 
-The task of unitary quantum optimal control is to determine a set of control parameters $`\vec{\alpha}`$ that realize a desired unitary evolution on the quantum system. 
+The task of unitary quantum optimal control is to determine a set of control parameters $\vec{\alpha}$ that realize a desired unitary evolution on the quantum system. 
 
 Specifically, the dynamics under the Hamiltonian
 
@@ -22,7 +22,7 @@ generates a unitary evolution
 U(\vec{\alpha},t) = \mathcal{T}\exp \bigg[ \int_0^t d\tau H(\vec{\alpha},\tau) \bigg].
 ```
 
-The task of optimal control is to determine a set of control parameters $`\vec{\alpha}^*`$ and a control time $`T^*`$ such that the system's evolution $`U(\vec{\alpha}^*, T^*)`$ approximates a desired unitary evolution $`U_{target}`$. 
+The task of optimal control is to determine a set of control parameters $\vec{\alpha}^*$ and a control time $T^*$ such that the system's evolution $U(\vec{\alpha}^*, T^*)$ approximates a desired unitary evolution $U_{target}$. 
 
 The GOAT algorithm assumes that the each control function is described as a combination of a set of parametrized basis functions. This is a rather general definition and many choices for this decomposition can be made. Referred to as an *ansatz*, the choice of decomposition is typically informed by experimental considerations. One example is the expansion of each control function within an orthogonal function basis (like a polynomial basis or Fourier basis):
 
@@ -32,15 +32,15 @@ c_i(\vec{\alpha},t) = \sum_n^N \alpha_n f_n(t).
 
 While this optimization can be performed using gradient-free methods, optimization algorithms that utilize information about the gradient of the objective function w.r.t. the control parameters can yield much faster optimization. 
 
-In order to utilize gradient-based optimization routines it is required that we compute the partial derivative of the unitary evolution with respect to a particular parameter $`\alpha_n`$: $`\partial_{\alpha_n} U({\vec{\alpha},T})`$. This can then be used (via the chain rule) to compute gradients of the objective function. 
+In order to utilize gradient-based optimization routines it is required that we compute the partial derivative of the unitary evolution with respect to a particular parameter $\alpha_n$: $\partial_{\alpha_n} U({\vec{\alpha},T})$. This can then be used (via the chain rule) to compute gradients of the objective function. 
 
-We compute $`\partial_{\alpha_n} U({\vec{\alpha},T})`$ by deriving a new differential equation from the Schrodinger equation:
+We compute $\partial_{\alpha_n} U({\vec{\alpha},T})$ by deriving a new differential equation from the Schrodinger equation:
 
 ```math
 i\hbar \partial_t U(\vec{\alpha},t) = H(\vec{\alpha},t)U(\vec{\alpha},t)
 ```
 
-by differentiating w.r.t $`\alpha_n`$ and utilizing the product rule
+by differentiating w.r.t $\alpha_n$ and utilizing the product rule
 
 ```math
 \begin{align*}
@@ -49,9 +49,9 @@ i\hbar\partial_{\alpha_n} \partial_t U(\vec{\alpha},t) &= \bigg(\partial_{\alpha
 \end{align*}
 ```
 
-The last step utilizes the symmetry of the second derivative to obtain a differential equation for $`\partial_{\alpha_n} U(\vec{\alpha},t)`$. 
+The last step utilizes the symmetry of the second derivative to obtain a differential equation for $\partial_{\alpha_n} U(\vec{\alpha},t)$. 
 
-To compute $`\partial_{\alpha_n} U(\vec{\alpha},T)`$ at a final time $`T`$, we integrate the coupled differential equations:
+To compute $\partial_{\alpha_n} U(\vec{\alpha},T)$ at a final time $T$, we integrate the coupled differential equations:
 
 ```math
 
@@ -75,11 +75,11 @@ U(\vec{\alpha},t)\\
 
 ```
 
-This coupled differential equation is referred to as the GOAT Equations of Motion (EOM). The initial conditions are $`U(\vec{\alpha},0) = I`$ and $`\partial_{\alpha_n} U(\vec{\alpha},0) = 0~ ~ \forall ~ ~ \alpha_n`$. It has a significant amount of internal structure which is specialized on in this package for efficient computation.
+This coupled differential equation is referred to as the GOAT Equations of Motion (EOM). The initial conditions are $U(\vec{\alpha},0) = I$ and $\partial_{\alpha_n} U(\vec{\alpha},0) = 0~ ~ \forall ~ ~ \alpha_n$. It has a significant amount of internal structure which is specialized on in this package for efficient computation.
 
-First, it depends only on a single parameter $`\alpha_n`$ thus, computing the gradient can be obtained through parallelization, solving a seperate GOAT EOM for each parameter to be optimized. 
+First, it depends only on a single parameter $\alpha_n$ thus, computing the gradient can be obtained through parallelization, solving a seperate GOAT EOM for each parameter to be optimized. 
 
-Second, the action of the differential equation is highly structured: the upper triangle of the matrix is null and the diagonal of the matrix is $`H(\vec{\alpha},t)`$. Thus, storing this matrix, even in a sparse form is inefficient. Not only that, but the Hamiltonians of most physically realizable quantum systems are sparse which suggests that instantiating the action of the EOMs is not efficient in general. 
+Second, the action of the differential equation is highly structured: the upper triangle of the matrix is null and the diagonal of the matrix is $H(\vec{\alpha},t)$. Thus, storing this matrix, even in a sparse form is inefficient. Not only that, but the Hamiltonians of most physically realizable quantum systems are sparse which suggests that instantiating the action of the EOMs is not efficient in general. 
 
 Thus, this package specializes on these structures to implement parallelized, matrix-free implementations of the GOAT EOMs to optimize performance.
 
@@ -95,7 +95,7 @@ However, one does not need to use DifferentialEquations.jl or Optim.jl. At it's 
 
 Within this package we also provide the support to define dynamical reference frames. A choice of reference frame (sometimes called an "rotating frame" or an "interaction picture") is a mathematical and physical utility used to simplify quantum dynamics. 
 
-A dynamical reference frame is defined by a Hermitian operator: $`A`$ (we currently only support time-independent reference frames but plan to add more functionality in the future). This operator may be derived from the system's Hamiltonian and is often chosen in such a way that the effective quantum dynamics within the reference frame is simplified. The most common example taught in contemporary quantum mechanics is known as the [interaction picture](https://en.wikipedia.org/wiki/Interaction_picture). 
+A dynamical reference frame is defined by a Hermitian operator: $A$ (we currently only support time-independent reference frames but plan to add more functionality in the future). This operator may be derived from the system's Hamiltonian and is often chosen in such a way that the effective quantum dynamics within the reference frame is simplified. The most common example taught in contemporary quantum mechanics is known as the [interaction picture](https://en.wikipedia.org/wiki/Interaction_picture). 
 
 However, the interaction picture is only a particular choice of refence frame! Many other references frames can be defined which are esspecially interesting or useful (See for example, the original [DRAG paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.103.110501) where a time-dependent reference frame is used to derive some of the most effective and common control pulses used today.)
 
@@ -109,7 +109,7 @@ While not a direct dependency, the authors recommend using the [QuantumOptics.jl
 
 ## Example 1: Optimizing a gaussian pulse for a single qubit
 
-This is perhaps the simplest example of a quantum optimal control problem. The physical task is to invert a qubit's population from he ground state $`\ket{0}`$ to the orthogonal state $`\ket{1}`$.
+This is perhaps the simplest example of a quantum optimal control problem. The physical task is to invert a qubit's population from he ground state $\ket{0}$ to the orthogonal state $\ket{1}$.
 
 Given a qubit Hamiltonian 
 
@@ -123,9 +123,9 @@ one can determine analytically that there are a family of pulses which will acco
 \int_0^t d\tau \Omega(\tau) = \pi
 ```
 
-one common choice of $`\Omega(t)`$ is a Gaussian function (due to an array of reasons outside the scope of this example). 
+one common choice of $\Omega(t)$ is a Gaussian function (due to an array of reasons outside the scope of this example). 
 
-For this example we will fix the mean and standard deviation of the Gaussian to $`\mu=T/2`$ and $`\sigma = T/6`$. Therefore, we must determine the amplitude of the Gaussian in order to satisfy the topological criteraia and create population inversion.
+For this example we will fix the mean and standard deviation of the Gaussian to $\mu=T/2$ and $\sigma = T/6$. Therefore, we must determine the amplitude of the Gaussian in order to satisfy the topological criteraia and create population inversion.
 
 The code to accomplish this is below:
 
@@ -200,11 +200,11 @@ The quantum systems that people deal with in a laboratory are very often *not* q
 H = \omega \hat{n}+\frac{\delta}{2} \hat{n}(\hat{n}-1)
 ```
 
-where the frequency of the oscillator is specified by $`\omega`$ and $`\delta`$ defines the anharmonicity (it adds a perturbation that makes different energy levels of the oscillator have different transition frequencies). 
+where the frequency of the oscillator is specified by $\omega$ and $\delta$ defines the anharmonicity (it adds a perturbation that makes different energy levels of the oscillator have different transition frequencies). 
 
-This system has an infinite number of eigenstates that form a ladder-like structure. However, we can define a "qubit" within a 2-dimensional subspace. For instance, we can choose the subspace spanned by the two lowest energy eigenstates: $`\{|0 \rangle, |1\rangle \}`$. 
+This system has an infinite number of eigenstates that form a ladder-like structure. However, we can define a "qubit" within a 2-dimensional subspace. For instance, we can choose the subspace spanned by the two lowest energy eigenstates: $\{|0 \rangle, |1\rangle \}$. 
 
-In this example, we will use GOAT.jl to find a optimal control that implements a $`\pi`$ rotation within this subspace (i.e, find a unitary $`V`$ s.t. $`V|0\rangle \propto |1\rangle`$ and $`V|1\rangle \propto |0\rangle`$). This is a much more challenging task than the one explored in Example 1. In particular, we must make sure that the unitary $`V`$ does not connect (or minimially connects) the $`|0\rangle`$ or $`|1\rangle`$ states to any other states of the oscillator. This is a process called leakage. 
+In this example, we will use GOAT.jl to find a optimal control that implements a $\pi$ rotation within this subspace (i.e, find a unitary $V$ s.t. $V|0\rangle \propto |1\rangle$ and $V|1\rangle \propto |0\rangle$). This is a much more challenging task than the one explored in Example 1. In particular, we must make sure that the unitary $V$ does not connect (or minimially connects) the $|0\rangle$ or $|1\rangle$ states to any other states of the oscillator. This is a process called leakage. 
 
 Our control term has the form 
 
@@ -212,7 +212,7 @@ Our control term has the form
 H_c(t) = \Omega(t)(\hat{a} + \hat{a}^\dagger). 
 ```
 
-Where $`\hat{a}`$ and $`\hat{a}^\dagger`$ are the excitation [anhilation and creation operators](https://en.wikipedia.org/wiki/Creation_and_annihilation_operators), respectively. 
+Where $\hat{a}$ and $\hat{a}^\dagger$ are the excitation [anhilation and creation operators](https://en.wikipedia.org/wiki/Creation_and_annihilation_operators), respectively. 
 
 ```julia
 using GOAT
