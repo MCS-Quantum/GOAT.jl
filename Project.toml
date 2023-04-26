@@ -1,7 +1,7 @@
 name = "GOAT"
 uuid = "7c88c5c5-82ab-4db3-870b-91186f03e5ce"
 authors = ["Paul Kairys <pkairys@anl.gov>"]
-version = "0.0.2"
+version = "0.0.3"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
