@@ -86,7 +86,7 @@ function colored_noise(lf::Float64, hf::Float64, n::Int64, alpha::Float64, seed:
     return amps, freqs, phases
 end 
 
-function test_derivatives(sys, prob, opt_param_inds, p_test; dh=1e-8, tol=1e-5, diffeq_options = (abstol = 1e-9, reltol= 1e-9, alg=Vern9()), SE_reduce_map = SE_infidelity_reduce_map, GOAT_reduce_map=GOAT_infidelity_reduce_map, only_coefficeint_funcs=true)
+function test_derivatives(sys, prob, params, opt_param_inds, p_test; dh=1e-8, tol=1e-5, diffeq_options = (abstol = 1e-9, reltol= 1e-9, alg=Vern9()), SE_reduce_map = SE_infidelity_reduce_map, GOAT_reduce_map=GOAT_infidelity_reduce_map, only_coefficeint_funcs=true)
     num_basis_funcs = size(sys.c_ls,1)
     p = similar(p_test)
     for j in opt_param_inds
@@ -104,10 +104,10 @@ function test_derivatives(sys, prob, opt_param_inds, p_test; dh=1e-8, tol=1e-5, 
             if only_coefficeint_funcs
                 continue
             end
-            g = evaluate_infidelity(p_test,sys,prob,SE_reduce_map,diffeq_options)
-            dg = evaluate_infidelity(p,sys,prob,SE_reduce_map,diffeq_options)
+            g = evaluate_infidelity(p_test,sys,prob,params)
+            dg = evaluate_infidelity(p,sys,prob,params)
             ∂g_FD = (dg-g)/dh
-            g,∂g = solve_GOAT_eoms_reduce(p_test,sys,prob,[j], GOAT_reduce_map, diffeq_options)
+            g,∂g = solve_GOAT_eoms_reduce(p_test,sys,prob,[j], params)
             diff = abs(∂g_FD - ∂g[1])
             strdiff = @sprintf "%.5e" diff
             @assert diff <= tol "Error in the unitary gradient of basis $i parameter $j: $strdiff"
