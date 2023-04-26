@@ -230,7 +230,7 @@ end
 QOCProblem(target, control_time, Pc, Pa) = QOCProblem(Pc, Int(round(tr(Pc))), Pa, Int(round(tr(Pa))), target, control_time)
 
 struct QOCParameters{A,B,C,D,E}
-    ODE_options::Dict
+    ODE_options::NamedTuple
     SE_reduce_map::A
     GOAT_reduce_map::B
     optim_alg::C
