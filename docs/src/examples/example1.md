@@ -23,7 +23,7 @@ For this example we will fix the mean and standard deviation of the Gaussian to 
 ```@example ex1
 using GOAT
 using LinearAlgebra, SparseArrays # For instantiating necessary matrices
-using DifferentialEquations # Load differetial equation algorithms
+using OrdinaryDiffEq # Load differetial equation algorithms
 using Optim, LineSearches # Load optimization and linesearch algorithms
 ```
 

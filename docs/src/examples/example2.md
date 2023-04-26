@@ -28,7 +28,7 @@ Where $\hat{a}$ and $\hat{a}^\dagger$ are the excitation [anhilation and creatio
 using GOAT
 using QuantumOptics
 using LinearAlgebra, SparseArrays # For instantiating necessary matrices
-using DifferentialEquations # Load differetial equation algorithms
+using OrdinaryDiffEq # Load differetial equation algorithms
 using Optim, LineSearches # Load optimization and linesearch algorithms
 ```
 
