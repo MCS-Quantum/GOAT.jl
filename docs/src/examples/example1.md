@@ -129,5 +129,6 @@ params = QOCParameters(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim
 Finally we run our optimization
 
 ```@example ex1
-res = find_optimal_controls(p0, opt_param_inds, sys, prob, params) 
+res = find_optimal_controls(p0, opt_param_inds, sys, prob, params)
+res
 ```

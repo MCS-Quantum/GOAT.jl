@@ -134,7 +134,7 @@ GOAT_reduce_map = GOAT_infidelity_reduce_map
 
 ```@example ex2
 # Define options for DifferentialEquations.jl (see DifferentialEquation docs for info)
-diffeq_options = (abstol = 1e-9, reltol= 1e-9, alg=Vern9())
+ODE_options = (abstol = 1e-9, reltol= 1e-9, alg=Vern9())
 
 # Define the optimizer options from Optim.jl (See Optim.jl docs for info)
 optim_alg = Optim.LBFGS(linesearch=LineSearches.BackTracking()) # A Back-Tracking linesearch
@@ -167,7 +167,8 @@ params = QOCParameters(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim
 Finally we run our optimization
 
 ```@example ex2
-res = find_optimal_controls(p0, opt_param_inds, sys, prob, params) 
+res = find_optimal_controls(p0, opt_param_inds, sys, prob, params)
+res
 ```
 
 The converged infidelity should be around 7e-4, higher fidelities are possible. Explore the ansatz, control time, and other parameters to find a better optimum!
