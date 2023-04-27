@@ -164,3 +164,136 @@ function test_derivatives(sys, prob, params, opt_param_inds, p_test; dh=1e-8, to
     end
     return println("Derivatives are all good")
 end
+
+##### Basic functions
+
+"""
+    sinusoid_kernel(t, a, w, phi)
+
+Computes the value of a sine function. 
+"""
+function sinusoid_kernel(t, a, w, phi)
+    return a*sin(w*t+phi)
+end
+
+"""
+    gaussian_kernel(t, a, mu,sigma)
+
+Computes the value of a gaussian. 
+"""
+function gaussian_kernel(t, a, mu,sigma)
+    return a*exp(-0.5*( (t-mu) / sigma)^2)
+end
+
+
+"""
+    morlet_kernel(t, a, mu, sigma, w, phi)
+
+Morlet wavelet kernel (although not a true wavelet because it is not normalized).
+
+Effectively a gaussian-windowed sinusoid function. 
+"""
+function 
+    return a*exp(-0.5*( (t-mu) / sigma)^2)*sin(w*t+phi)
+end
+
+"""
+    general_logistic(t, lower, upper, slope, start, nu)
+
+A version of a generalized logistic function found on wikipedia: 
+https://en.wikipedia.org/wiki/Generalised_logistic_function.
+
+# Arguments
+- `t`: The time.
+- `lower`: The lower asymptote.
+- `upper`: The upper asymptote.
+- `slope` : The slope of the function.
+- `start = 1e3`: A shift of the logistic function to adjust `general_logistic(t=0)`.
+- `nu = 1.0`: A parameter to set where the maximum derivative is located. 
+"""
+function general_logistic(t, lower, upper, slope, start=1e3, nu=1.0)
+    A = lower
+    B = slope
+    K = upper
+    Q = start # The larger this is the smaller general_logistic(t=0)
+    return A + (K-A)/((1+Q*exp(-B*t))^(1/nu))
+end
+
+"""
+    flat_top_cosine(t, A, T, tr)
+
+A flat-top cosine function kernel. 
+
+# Arguments
+- `A`: The amplitude of the function.
+- `T`: Duration of the function.
+- `tr`: The rise and fall time.
+"""
+function flat_top_cosine(t, A, T, tr)
+    if t<=tr
+        e = 0.5*A*(1-cos(pi*t/tr))
+        return e
+    elseif t>=(T-tr)
+        e = 0.5*A*(1-cos(pi*(T-t)/tr))
+        return e
+    else
+        e = A
+        return e
+    end
+end
+
+
+"""
+    window(x,lower,upper,gradient)
+
+A windowing function based on a product of two generalized logistic functions.
+
+See `general_logistic` for additional details.
+
+# Arguments
+- `lower`: The location of the left tail.
+- `right`: The location of the right tail.
+- `gradient`: The maximum gradient of the logistic functions
+"""
+function window(x,lower,upper,gradient=20)
+    rising = general_logistic(x-lower,0,1,gradient)
+    lowering = general_logistic(-x+upper,0,1,gradient)
+    return lowering*rising
+end
+
+
+"""
+    S(x, lower, upper ; gradient=1)
+
+A saturation function that limits amplitudes to a particular range specified by [lower,upper].
+"""
+function S(x, lower,upper ; gradient=1)
+    mid = (upper-lower)*0.5
+    Q = -upper/lower
+    return general_logistic(x/mid,lower,upper,gradient,Q)
+end
+
+
+"""
+    dSdx(x, lower, upper; gradient=1)
+
+Calculates the partial derivative of the saturation function w.r.t the independent variable x.
+"""
+function dSdx(x, lower, upper ; gradient=1)
+    mid = (upper-lower)*0.5
+    Q = -upper/lower
+    b = upper
+    a = lower
+    g = gradient
+    xbar = x/mid
+    return -( (b-a)/ ( (1+Q*exp(-2*g*x/(b-a)))^2 ))*Q*(exp(-2*g*x/(b-a)))*(-2*g/(b-a))
+end
+
+"""
+    LO(t,w)
+
+Simulates a local oscillator with frequency `w`.
+"""
+function LO(t,w)
+    return cos(w*t)
+end

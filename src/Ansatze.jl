@@ -23,102 +23,17 @@
 # ***************************************************************************************************
 
 
-##### Basic functions
-function sinusoid_kernel(t, a, w, phi)
-    return a*sin(w*t+phi)
-end
-
-function gaussian_kernel(t, a, mu,sigma)
-    return a*exp(-0.5*( (t-mu) / sigma)^2)
-end
-
-
 """
-Morlet wavelet kernel (although not a true wavelet because it is not normalized):
+    fourier_coefficient(p,t,i,N)
 
-morlet_kernel(t, a, mu, sigma, w, phi)
+Compute the time dependent coefficient for a control basis operator given by a Fourier ansatze.
+
+# Arguments
+- `p`: The vector of control parameters.
+- `t`: The time at which to evaluate the coefficient function.
+- `i`: The index of the control basis operator.
+- `N`: The total number of basis functions used to define the coefficient function. 
 """
-function morlet_kernel(t, a, mu, sigma, w, phi)
-    return a*exp(-0.5*( (t-mu) / sigma)^2)*sin(w*t+phi)
-end
-
-"""
-A version of a generalized logistic function found on wikipedia: 
-https://en.wikipedia.org/wiki/Generalised_logistic_function.
-"""
-function general_logistic(t, lower, upper, slope, start=1e3, nu=1.0, C=1)
-    A = lower
-    B = slope
-    K = upper
-    Q = start # The larger this is the smaller GL(0)
-    return A + (K-A)/((C+Q*exp(-B*t))^(1/nu))
-end
-
-"""
-    flat_top_cosine(t, A, T, tr)
-
-A flat-top cosine function with duration T
-and a rise/fall time of tr with a cosine-shaped rise/fall.
-
-"""
-function flat_top_cosine(t, A, T, tr)
-    if t<=tr
-        e = 0.5*A*(1-cos(pi*t/tr))
-        return e
-    elseif t>=(T-tr)
-        e = 0.5*A*(1-cos(pi*(T-t)/tr))
-        return e
-    else
-        e = A
-        return e
-    end
-end
-
-
-"""
-A windowing function based on a product of two generalized logistic functions. 
-"""
-function window(x,lower,upper,gradient=20)
-    rising = general_logistic(x-lower,0,1,gradient)
-    lowering = general_logistic(-x+upper,0,1,gradient)
-    return lowering*rising
-end
-
-
-"""
-A saturation function that limits amplitudes to a particular range specified by [lower,upper].
-"""
-function S(x,lower,upper;gradient=1)
-    mid = (upper-lower)*0.5
-    Q = -upper/lower
-    return general_logistic(x/mid,lower,upper,gradient,Q)
-end
-
-
-"""
-Calculates the partial derivative of the saturation function w.r.t the independent variable x.
-"""
-function dSdx(x,lower,upper;gradient=5)
-    mid = (upper-lower)*0.5
-    Q = -upper/lower
-    b = upper
-    a = lower
-    g = gradient
-    xbar = x/mid
-    return -( (b-a)/ ( (1+Q*exp(-2*g*x/(b-a)))^2 ))*Q*(exp(-2*g*x/(b-a)))*(-2*g/(b-a))
-end
-
-"""
-Adds a mixing effect for a local oscillator.
-"""
-function LO(t,w)
-    return cos(w*t)
-end
-
-
-
-## Ansatze
-
 function fourier_coefficient(p,t,i,N::Int64)
     c = 0.0
     K = 3
@@ -131,7 +46,16 @@ end
 
 
 """
-Partial deriv of c_func w.r.t the lth element of p
+    ∂fourier_coefficient(p,t,i,l,N)
+
+Computes the partial derivative of `fourier_coefficient` w.r.t p[l] evaluated at (p,t).
+
+# Arguments
+- `p`: The vector of control parameters.
+- `t`: The time at which to evaluate the coefficient function.
+- `i`: The index of the control basis operator.
+- `l`: The index of the `p` with which to compute the partial derivative to. 
+- `N`: The total number of basis functions used to define the coefficient function. 
 """
 function ∂fourier_coefficient(p,t,i,l,N::Int64)
     K = 3
@@ -154,6 +78,17 @@ function ∂fourier_coefficient(p,t,i,l,N::Int64)
     return 0.0
 end
 
+"""
+    gaussian_coefficient(p,t,i,N)
+
+Compute the time dependent coefficient for a control basis operator given by a gaussian ansatze.
+
+# Arguments
+- `p`: The vector of control parameters.
+- `t`: The time at which to evaluate the coefficient function.
+- `i`: The index of the control basis operator.
+- `N`: The total number of basis functions used to define the coefficient function. 
+"""
 function gaussian_coefficient(p,t,i,N::Int64)
     c = 0.0
     K = 3
@@ -166,7 +101,16 @@ end
 
 
 """
-Partial deriv of c_func w.r.t the lth element of p
+    ∂gaussian_coefficient(p,t,i,l,N::Int64)
+
+Computes the partial derivative of `fourier_coefficient` w.r.t p[l] evaluated at (p,t).
+
+# Arguments
+- `p`: The vector of control parameters.
+- `t`: The time at which to evaluate the coefficient function.
+- `i`: The index of the control basis operator.
+- `l`: The index of the `p` with which to compute the partial derivative to. 
+- `N`: The total number of basis functions used to define the coefficient function. 
 """
 function ∂gaussian_coefficient(p,t,i,l,N::Int64)
     K = 3
@@ -189,6 +133,18 @@ function ∂gaussian_coefficient(p,t,i,l,N::Int64)
     return 0.0
 end
 
+
+"""
+    poly_coefficient(p,t,i,N)
+
+Compute the time dependent coefficient for a control basis operator given by a polynomial ansatze.
+
+# Arguments
+- `p`: The vector of control parameters.
+- `t`: The time at which to evaluate the coefficient function.
+- `i`: The index of the control basis operator.
+- `N`: The total number of basis functions used to define the coefficient function. 
+"""
 function poly_coefficient(p,t,i,N::Int64)
     M = 2*N-1 # Number of parameters for each control term
     j0 = (i-1)*M+1
@@ -203,7 +159,16 @@ end
 
 
 """
-Partial deriv of c_func w.r.t the lth element of p
+    ∂poly_coefficient(p,t,i,l,N)
+
+Computes the partial derivative of `fourier_coefficient` w.r.t p[l] evaluated at (p,t).
+
+# Arguments
+- `p`: The vector of control parameters.
+- `t`: The time at which to evaluate the coefficient function.
+- `i`: The index of the control basis operator.
+- `l`: The index of the `p` with which to compute the partial derivative to. 
+- `N`: The total number of basis functions used to define the coefficient function. 
 """
 function ∂poly_coefficient(p,t,i,l,N::Int64)
     M = 2*N-1 # Number of parameters for each control term
