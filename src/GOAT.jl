@@ -31,7 +31,7 @@ export SE_action, GOAT_action, ControllableSystem, make_SE_update_function
 export make_GOAT_update_function, solve_SE, solve_GOAT_eoms, make_GOAT_initial_state
 export QOCProblem, GOAT_infidelity_reduce_map, SE_infidelity_reduce_map
 export QOCParameters
-export solve_GOAT_eoms_reduce, parallel_GOAT_fg!, find_optimal_controls, evaluate_infidelity
+export solve_GOAT_eoms_reduce, parallel_GOAT_fg!, find_optimal_controls, evaluate_objective
 
 
 include("ObjectiveFunctions.jl")
@@ -324,7 +324,6 @@ function QOCParameters(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim
     return QOCParameters{typeof(SE_reduce_map),typeof(GOAT_reduce_map),typeof(optim_alg),typeof(optim_options),typeof(num_params_per_GOAT)}(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim_options,num_params_per_GOAT)
 end
 
-
 function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
@@ -343,11 +342,6 @@ function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64
     lmul!(-im, du)
 end
 
-"""
-    SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
-
-TBW
-"""
 function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
@@ -380,6 +374,24 @@ function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64
     lmul!(-im, du)
 end
 
+"""
+    SE_action!(du, u, p, t, d_ms, d_ls, d_vs, c_ms, c_ls, c_vs, c_func)
+
+Compute the action of the Schrodinger equation on a matrix `u` and place in `du`.
+
+# Arguments
+- `du::Array{ComplexF64}`: The array for the derivative `t`
+- `u::Array{ComplexF64}`: The array for the state at time `t`
+- `p::Vector{Float64}`: The parameter vector defining the evolution. 
+- `t::Float64`: The time.
+- `d_ms::Vector{Vector{Int64}}`: The sparse representation of the drift operator's first index.
+- `d_ls::Vector{Vector{Int64}}`: The sparse representation of the drift operators's second index.
+- `d_vs::Vector{Vector{ComplexF64}}`: The sparse representation of the mtrix element of the drift operator.
+- `c_ms::Vector{Vector{Int64}}`: The sparse representation of the control operators' first index.
+- `c_ls::Vector{Vector{Int64}}`: The sparse representation of the control operators' second index.
+- `c_vs::Vector{Vector{ComplexF64}}`: The sparse representation of the mtrix element of the control operators.
+- `c_func::Function`: The function that computes the time-dependent coefficients of the control operators.
+"""
 function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64},c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
@@ -506,6 +518,26 @@ function GOAT_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float
     lmul!(-im, du)
 end
 
+"""
+    GOAT_action!(du, u, p, t, d_ms, d_ls, d_vs, c_ms, c_ls, c_vs, opt_param_inds, c_func, ∂c_func)
+
+Compute the action of the GOAT equation of motions on a matrix `u` and place in `du`.
+
+# Arguments
+- `du::Array{ComplexF64}`: The array for the derivative `t`
+- `u::Array{ComplexF64}`: The array for the state at time `t`
+- `p::Vector{Float64}`: The parameter vector defining the evolution. 
+- `t::Float64`: The time.
+- `d_ms::Vector{Vector{Int64}}`: The sparse representation of the drift operator's first index.
+- `d_ls::Vector{Vector{Int64}}`: The sparse representation of the drift operators's second index.
+- `d_vs::Vector{Vector{ComplexF64}}`: The sparse representation of the mtrix element of the drift operator.
+- `c_ms::Vector{Vector{Int64}}`: The sparse representation of the control operators' first index.
+- `c_ls::Vector{Vector{Int64}}`: The sparse representation of the control operators' second index.
+- `c_vs::Vector{Vector{ComplexF64}}`: The sparse representation of the mtrix element of the control operators.
+- `opt_param_inds::Vector{Int64}`: The indices of the parameter vector `p` to propogate a derivative for
+- `c_func::Function`: The function that computes the time-dependent coefficients of the control operators.
+- `∂c_func::Function`: The function that computes the derivative of the time-dependent coefficients of the control operators.
+"""
 function GOAT_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64}, c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
@@ -591,6 +623,14 @@ function GOAT_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float
     lmul!(-im, du)
 end
 
+"""
+    make_SE_update_function(sys)
+
+Generate an in-place update function `f!(du,u,p,t)` for the Schrodinger equation based on `sys`.
+
+# Arguments
+- `sys::ControllableSystem`: The controllable system 
+"""
 function make_SE_update_function(sys::ControllableSystem)
     if sys.d_ls === nothing
         if sys.orthogonal_basis
@@ -605,6 +645,15 @@ function make_SE_update_function(sys::ControllableSystem)
     end
 end
 
+"""
+    make_GOAT_update_function(sys,opt_param_inds)
+
+Generate an in-place update function `f!(du,u,p,t)` for the GOAT equations of motion equation.
+
+# Arguments
+- `sys::ControllableSystem`: The controllable system.
+- `opt_param_inds::Vector{Int64}`: A vector of indices that specifies which control derivatives will be propogated.
+"""
 function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vector{Int})
     if sys.d_ls === nothing
         if sys.orthogonal_basis
@@ -619,6 +668,11 @@ function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vect
     end
 end
 
+"""
+    make_GOAT_initial_state(d,opt_param_inds)
+
+Generate the initial state of the coupled equations of motion for the GOAT method. 
+"""
 function make_GOAT_initial_state(d,opt_param_inds)
     n_us = size(opt_param_inds,1)+1
     u0 = zeros(ComplexF64,d*n_us,d)
@@ -628,6 +682,17 @@ function make_GOAT_initial_state(d,opt_param_inds)
     return u0
 end
 
+"""
+    solve_SE(sys, Tmax, p; <keyword arguments>)
+
+Integrate the Schrodinger equation for a specified time and control parameter set. 
+
+# Arguments
+    - `sys::ControllableSystem`: The controllable system.
+    - `Tmax::Float64`: The total contorl time.
+    - `p::Vector{Float64}`: The parameters which define the controlled evolution.
+    - `ODE_options`: The specification of the integrator settings from OrdinaryDiffEq.jl
+"""
 function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; t0=0.0, args...)
     tspan = (t0, Tmax)
     f = make_SE_update_function(sys)
@@ -637,7 +702,18 @@ function solve_SE(sys::ControllableSystem, Tmax::Float64, p::Vector{Float64}; t0
     return sol
 end
 
+"""
+    solve_GOAT_eoms(sys, opt_param_inds, Tmax, p; <keyword arguments>)
 
+Integrate the Schrodinger equation for a specified time and control parameter set. 
+
+# Arguments
+    - `sys::ControllableSystem`: The controllable system.
+    - `opt_param_inds::Vector{Int64}`: The vector of parameter indices specifying which gradients will be propogated.
+    - `Tmax::Float64`: The total contorl time.
+    - `p::Vector{Float64}`: The parameters which define the controlled evolution.
+    - `ODE_options`: The specification of the integrator settings from OrdinaryDiffEq.jl
+"""
 function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, Tmax::Float64, p::Vector{Float64} ; t0=0.0, args...)
     tspan = (t0,Tmax)
     g = make_GOAT_update_function(sys, opt_param_inds)
@@ -647,6 +723,17 @@ function solve_GOAT_eoms(sys::ControllableSystem, opt_param_inds::Vector{Int}, T
     return sol
 end
 
+
+"""
+    GOAT_infidelity_reduce_map(sys, prob, goat_sol)
+
+Maps the GOAT ODE solution to the objective function and gradient vector using an infidelity measure.
+
+# Arguments
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The QOCProblem
+    - `goat_sol::OrdinaryDiffEq.solution`: The solution to the GOAT equations of motion.
+"""
 function GOAT_infidelity_reduce_map(sys::ControllableSystem, prob::QOCProblem, goat_sol)
     d = sys.dim    
     Pc = prob.Pc
@@ -666,6 +753,16 @@ function GOAT_infidelity_reduce_map(sys::ControllableSystem, prob::QOCProblem, g
     return g, ∂g_vec
 end
 
+"""
+    SE_infidelity_reduce_map(sys, prob, SE_sol)
+
+Maps Schrodinger ODE solution to the objective function using an infidelity measure.
+
+# Arguments
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The QOCProblem
+    - `SE_sol::OrdinaryDiffEq.solution`: The solution to the Schrodinger equation.
+"""
 function SE_infidelity_reduce_map(sys::ControllableSystem, prob::QOCProblem, SE_sol)
     d = sys.dim
     Pc = prob.Pc
@@ -676,26 +773,50 @@ function SE_infidelity_reduce_map(sys::ControllableSystem, prob::QOCProblem, SE_
     return g
 end
 
-function solve_GOAT_eoms_reduce(x, sys::ControllableSystem, prob::QOCProblem, opt_param_inds, params::QOCParameters)
+"""
+    solve_GOAT_eoms_reduce(p, sys, prob, opt_param_inds, params::QOCParameters) 
+
+Solves the GOAT eoms and outputs a objective function and gradient vector.
+
+# Arguments
+    - `p`: The control parameter vector at which the objective and gradient is being calculated. 
+    - `sys::ControllableSystem`: The controllable system.
+    - `opt_param_inds`: The vector of parameter indices which determines which gradients are calculated.
+    - `param::QOCParameters`: The QOCParameters which provides the ODE_options.
+"""
+function solve_GOAT_eoms_reduce(p, sys::ControllableSystem, prob::QOCProblem, opt_param_inds, params::QOCParameters)
     T = prob.control_time
-    goat_sol = solve_GOAT_eoms(sys,opt_param_inds,T,x; params.ODE_options...)
+    goat_sol = solve_GOAT_eoms(sys,opt_param_inds,T,p; params.ODE_options...)
     out = params.GOAT_reduce_map(sys, prob, goat_sol)
     g = first(out)
     ∂gs = last(out)
     return g, ∂gs
 end
 
-function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
+"""
+    parallel_GOAT_fg!(F, G, p, sys, prob, params)
+
+Parallelized computation of the objective and gradient for QOC with GOAT.
+
+# Arguments
+    - `F`: The objective value
+    - `G`: The vector of gradients w.r.t. the control parameters `p`. 
+    - `p`: The control parameter vector.
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The QOCProblem
+    - `param::QOCParameters`: The QOCParameters.
+"""
+function parallel_GOAT_fg!(F, G, p, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
     T = prob.control_time
     if G !== nothing
-        num_params = size(x,1)
+        num_params = size(p,1)
         if params.num_params_per_GOAT === nothing
             num_params_per_GOAT = num_params
         else
             num_params_per_GOAT = params.num_params_per_GOAT
         end
         goat_param_indices = collect.(collect(Iterators.partition(1:num_params, num_params_per_GOAT)))
-        f = y -> solve_GOAT_eoms_reduce(x, sys, prob, y, params)
+        f = y -> solve_GOAT_eoms_reduce(p, sys, prob, y, params)
         out = pmap(f,goat_param_indices)
         gs = first.(out)
         # @assert gs[1] ≈ gs[end] # Trivial sanity check
@@ -705,7 +826,7 @@ function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, p
         end
         g = gs[1]
     else
-        sol = solve_SE(sys,T,x; params.ODE_options...)
+        sol = solve_SE(sys,T,p; params.ODE_options...)
         g = params.SE_reduce_map(sys,prob,sol)
     end
     
@@ -715,11 +836,26 @@ function parallel_GOAT_fg!(F, G, x, sys::ControllableSystem, prob::QOCProblem, p
 
 end
 
-function parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
+"""
+    parallel_GOAT_fg!(F, G, p, p_storage, opt_param_inds, sys, prob, params)
+
+Parallelized computation of the objective and gradient for QOC with GOAT.
+
+# Arguments
+    - `F`: The objective value
+    - `G`: The vector of gradients w.r.t. the control parameters `p`. 
+    - `p`: The control parameter vector.
+    - `p_storage`: A pre-allocated storage vector for current `p` values. 
+    - `opt_param_inds`: The vector of parameter indices which determines which gradients are calculated.
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The QOCProblem
+    - `param::QOCParameters`: The QOCParameters.
+"""
+function parallel_GOAT_fg!(F, G, p, p_storage, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
     T = prob.control_time
-    p_storage[opt_param_inds] .= x # Update the storage vector with new parameters from optimization
+    p_storage[opt_param_inds] .= p # Update the storage vector with new parameters from optimization
     if G !== nothing
-        num_params = size(x,1)
+        num_params = size(p,1)
         if params.num_params_per_GOAT === nothing
             num_params_per_GOAT = num_params
         else
@@ -748,12 +884,35 @@ function parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys::Controllable
 
 end
 
+"""
+    find_optimal_controls(p0, sys, prob, params)
+
+Run the GOAT algorithm and find optimal controls.
+
+# Arguments:
+    - `p0`: The initial guess of the optimal control parameters.
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The quantum optimal control problem.
+    - `param::QOCParameters`: The quantum optimal control parameters.
+"""
 function find_optimal_controls(p0, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
     fg!(F,G,x) = parallel_GOAT_fg!(F, G, x, sys, prob, params)
     res = Optim.optimize(Optim.only_fg!(fg!), p0, params.optim_alg, params.optim_options)
     return res
 end
 
+"""
+    find_optimal_controls(p0, opt_param_inds, sys, prob, params)
+
+Run the GOAT algorithm and find optimal controls.
+
+# Arguments:
+    - `p0`: The initial guess of the optimal control parameters.
+    - `opt_param_inds`: Indices of p0 which specify which parameters to hold constant and which to optimize.
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The quantum optimal control problem.
+    - `param::QOCParameters`: The quantum optimal control parameters.
+"""
 function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
     p_storage = deepcopy(p0)
     fg!(F,G,x) = parallel_GOAT_fg!(F, G, x, p_storage, opt_param_inds, sys, prob, params)
@@ -762,15 +921,37 @@ function find_optimal_controls(p0, opt_param_inds, sys::ControllableSystem, prob
     return res
 end
 
-function evaluate_infidelity(p0::Vector{Float64}, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
+"""
+    evaluate_objective(p, sys, prob, params)
+
+Evaluate the objective function at p.
+
+# Arguments:
+    - `p`: The optimal control parameters at which to evalute the objective. 
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The quantum optimal control problem.
+    - `param::QOCParameters`: The quantum optimal control parameters.
+"""
+function evaluate_objective(p::Vector{Float64}, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
     T = prob.control_time
-    sol = solve_SE(sys,T,p0; params.ODE_options...)
+    sol = solve_SE(sys,T,p; params.ODE_options...)
     g = params.SE_reduce_map(sys, prob, sol)
     return g
 end
 
-function evaluate_infidelity(ps::Vector{Vector{Float64}}, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
-    f = y -> evaluate_infidelity(y, sys, prob, params)
+"""
+    evaluate_objective(ps, sys, prob, params)
+
+Parallelized evaluation the objective function at multiple control parameters.
+
+# Arguments:
+    - `ps::Vector{Vector{Float64}}`: The optimal control parameters at which to evalute the objective. 
+    - `sys::ControllableSystem`: The controllable system.
+    - `prob::QOCProblem`: The quantum optimal control problem.
+    - `param::QOCParameters`: The quantum optimal control parameters.
+"""
+function evaluate_objective(ps::Vector{Vector{Float64}}, sys::ControllableSystem, prob::QOCProblem, params::QOCParameters)
+    f = y -> evaluate_objective(y, sys, prob, params)
     out = pmap(f,ps)
     return out
 end
