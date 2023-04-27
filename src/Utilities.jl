@@ -29,12 +29,15 @@ using FFTW, Random, Printf
 """
     get_sinusoidal_coefficients_from_FFT(ts, s)
 
-Compute the sinusoidal amplitude-phase coefficients and frequencies from FFT of the signal s with timeseries ts. 
+Compute the sinusoidal amplitude, frequencies, and phases of a signal.
 
-Outputs a triplet of: Amps, freqs, phases.
+Outputs a triplet of: Amps, freqs, phases via the decomposition: ``s(t) = ∑ᵢ aᵢ sin(ωᵢt+ϕᵢ)``.
+
+# Arguments
+- `ts`: the sampling times
+- `s`: the signal at each sampling time
 """
 function get_sinusoidal_coefficients_from_FFT(ts, s)
-    P = ts[end]
     dt = ts[2]-ts[1]
     fs = 1/dt
     N = size(ts,1)
@@ -50,26 +53,41 @@ end
 
 
 """
-    truncated_inv_fft(t, Aks, freqs, phi_ks ; N=nothing)
+    time_domain_signal(t::Float64, amps, freqs, phases, N)
 
-Compute the signal at time t defined by the sinusoidal amplitude-phase coefficients and FFT frequencies truncated
-to the N frequency components with largest magnitude.
+Compute a truncased inverse fourier transform at time `t`.
+
+The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ sin(ωᵢt+ϕᵢ)``
+
+# Arguments
+- `t`: The time to evaluate the inverse FFT.
+- `Aks`: The amplitudes.
+- 'freqs`: The frequencies.
+- `phi_ks`: The phases.
+- `N`: The number of components to keep when reconstructing the signal.
 """
-function truncated_inv_fft(t, Aks, freqs, phi_ks ; N=nothing)
+function time_domain_signal(t::Float64, amps, freqs, phases, N)
     c = 0.0
-    if N === nothing
-        for (Ak, phi_k, f) in zip(Aks, phi_ks, freqs)
-            c += Ak*cos(f*t+phi_k)
-        end
-    else
-        I = sortperm(abs.(Aks), rev=true)[1:N]
-        for i in I
-            c+= Aks[i]*cos(freqs[i]*t+phi_ks[i])
-        end
+    I = sortperm(abs.(amps), rev=true)[1:N]
+    for i in I
+        c+= amps[i]*cos(freqs[i]*t+phases[i])
     end
     return c
 end
 
+"""
+    time_domain_signal(t::Float64, amps, freqs, phases) 
+
+Compute a truncased inverse fourier transform at time `t`.
+
+The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ sin(ωᵢt+ϕᵢ)``
+
+# Arguments
+- `t`: The time to evaluate the inverse FFT.
+- `Aks`: The amplitudes.
+- 'freqs`: The frequencies.
+- `phi_ks`: The phases.
+"""
 function time_domain_signal(t::Float64, amps, freqs, phases)
     c = 0.0
     for (a,f,p) in zip(amps, freqs, phases)
@@ -79,14 +97,44 @@ function time_domain_signal(t::Float64, amps, freqs, phases)
 end
 
 
-function colored_noise(lf::Float64, hf::Float64, n::Int64, alpha::Float64, seed::Int64)
+"""
+    colored_noise(lf, hf, n, α, seed)
+
+Generate a set of amplitude, frequencies, and phases for randomly generated colored noise. 
+
+Specifically, generates colored noise with a power P(ω) ∝ ωᵅ
+
+# Arguments
+- `lf`: The low frequency cutoff. 
+- `hf`: The high frequency cutoff.
+- 'n`: The number of frequncy components.
+- `α`: The color of the noise.
+"""
+function colored_noise(lf::Float64, hf::Float64, n::Int64, α::Float64, seed::Int64)
     freqs = collect(range(lf,hf,length=n))
-    amps = freqs.^alpha
+    amps = freqs.^α
     phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
     return amps, freqs, phases
 end 
 
-function test_derivatives(sys, prob, params, opt_param_inds, p_test; dh=1e-8, tol=1e-5, diffeq_options = (abstol = 1e-9, reltol= 1e-9, alg=Vern9()), SE_reduce_map = SE_infidelity_reduce_map, GOAT_reduce_map=GOAT_infidelity_reduce_map, only_coefficeint_funcs=true)
+
+
+"""
+    test_derivatives(sys, prob, params, opt_param_inds, p_test; <keyword arguments>)
+
+Uses a finite difference method to confirm that gradients are calculated correctly.
+
+If `only_coefficeint_funcs=true` then only the coefficient functions are checked.
+If `only_coefficeint_funcs=false` then the GOAT equations of motion are solved and unitary gradients are checked. 
+
+# Arguments
+- `sys`: The `ControllableSystem`.
+- `prob`: The `QOCProblem`.
+- 'params`: The `QOCParameters`
+- `dh=1e-8`: The finite-difference step size of each parameter.
+- `tol=1e-5`: The tolerance that determines whether an error is raised. 
+"""
+function test_derivatives(sys, prob, params, opt_param_inds, p_test; dh=1e-8, tol=1e-5, only_coefficeint_funcs=true)
     num_basis_funcs = size(sys.c_ls,1)
     p = similar(p_test)
     for j in opt_param_inds

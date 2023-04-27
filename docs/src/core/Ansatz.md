@@ -1,3 +1,3 @@
 # Control Ansatze
 
-something
+In addition to the ansatz
