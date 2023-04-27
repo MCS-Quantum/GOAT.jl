@@ -46,6 +46,11 @@ include("Utilities.jl")
 export get_sinusoidal_coefficients_from_FFT, truncated_inv_fft
 export colored_noise, time_domain_signal, test_derivatives
 
+
+
+"""
+Instantiate a ControllableSystem struct.
+"""
 struct ControllableSystem{A,B,C,D,E}
     d_ms::A
     d_ls::A
@@ -63,7 +68,15 @@ struct ControllableSystem{A,B,C,D,E}
     tol::Float64
 end
 
+"""
+    ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
 
+Instantiate a ControllableSystem struct from input operators and functions.
+
+The `basis_ops` is a vector of basis operators which will be weighted by the
+coefficient functions `c_func`. `∂c_func` computes the first derivative of 
+c_func evaluated at an input.
+"""
 function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     d_ls,d_ms,d_vs = findnz(drift_op)
     d = size(drift_op,1)
@@ -74,8 +87,16 @@ function ControllableSystem(drift_op, basis_ops, c_func, ∂c_func)
     
 end
 
-function ControllableSystem(drift_op, basis_ops, c_func)
-    ∂c_func(t) = 0
+"""
+    NoDiffControllableSystem(drift_op, basis_ops, c_func)
+
+Instantiate a ControllableSystem struct with no specified `∂c_func`.
+
+The `basis_ops` is a vector of basis operators which will be weighted by the
+coefficient functions `c_func`.
+"""
+function NoDiffControllableSystem(drift_op, basis_ops, c_func)
+    ∂c_func = nothing
     d_ls,d_ms,d_vs = findnz(drift_op)
     d = size(drift_op,1)
     c_ls = [findnz(op)[1] for op in basis_ops]
@@ -85,6 +106,17 @@ function ControllableSystem(drift_op, basis_ops, c_func)
     
 end
 
+"""
+    ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, ∂c_func; <keyword arguments>)
+
+Instantiate a ControllableSystem struct with a specified `RF_generator`. 
+
+The `RF_generator` is a specification of the time-independent generator of the rotating
+reference frame. i.e., if ``∂V(t)=A*V(t)`` where A is the generator of type ``Eigen``.
+
+# Keyword Arguments
+- `sparse_tol::Float`: A tolerance which defines a threshold to discard matrix elements
+"""
 function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, ∂c_func; sparse_tol = 1e-12)
     d = size(drift_op,1)
     F = RF_generator
@@ -146,7 +178,17 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, �
     return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, sparse_tol)
 end
 
+"""
+    ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, ∂c_func; <keyword arguments>)
 
+Instantiate a ControllableSystem struct with a specified `RF_generator`. 
+
+The `RF_generator` is a specification of the time-independent generator of the rotating
+reference frame. i.e., if ``∂V(t)=A*V(t)`` where A is the generator of type ``Matrix``.
+
+# Keyword Arguments
+- `sparse_tol::Float`: A tolerance which defines a threshold to discard matrix elements
+"""
 function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, ∂c_func; sparse_tol = 1e-12)
     d = size(drift_op,1)
     F = eigen(RF_generator)
@@ -208,7 +250,17 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::Matrix, c_func, �
     return ControllableSystem{Nothing, Nothing, typeof(new_c_func), typeof(new_∂c_func), Nothing}(nothing, nothing, nothing, c_ls,c_ms,c_vs,new_c_func,new_∂c_func, nothing, nothing, false, d, true, sparse_tol)
 end
 
+"""
+    ControllableSystem(drift_op, basis_ops, RF_generator::Eigen, c_func, ∂c_func; <keyword arguments>)
 
+Instantiate a ControllableSystem struct with a specified `RF_generator`. 
+
+The `RF_generator` is a specification of the time-independent generator of the rotating
+reference frame. i.e., if ``∂V(t)=A*V(t)`` where A is the generator of type ``LinearAlgebra.Diagonal``.
+
+# Keyword Arguments
+- `sparse_tol::Float`: A tolerance which defines a threshold to discard matrix elements
+"""
 function ControllableSystem(drift_op, basis_ops, RF_generator::LinearAlgebra.Diagonal, c_func, ∂c_func)
     d_ls,d_ms,d_vs = findnz(drift_op)
     d = size(drift_op,1)
@@ -218,6 +270,9 @@ function ControllableSystem(drift_op, basis_ops, RF_generator::LinearAlgebra.Dia
     return ControllableSystem{typeof(d_ls), typeof(d_vs) ,typeof(c_func),typeof(∂c_func),typeof(RF_generator)}(d_ms, d_ls, d_vs, c_ls, c_ms, c_vs, c_func, ∂c_func, RF_generator, similar(RF_generator), true , d, false, 0.0)
 end
 
+"""
+Instantiate a QOCProblem struct.
+"""
 struct QOCProblem
     Pc::Array{ComplexF64}
     Pc_dim::Int64
@@ -227,8 +282,23 @@ struct QOCProblem
     control_time::Float64
 end
 
+"""
+    QOCProblem(target, control_time, Pc, Pa)
+
+Instantiate a QOCProblem struct with specified input operators and control time.
+
+# Arguments
+- `target::Array{ComplexF64}`: the target unitary operator in the computational subspace.
+- `control_time::Float64`: The duration of the control.
+- `Pc::Array{ComplexF64}`: A projector from the full unitary operator on the system to the computational subspace
+- `Pa::Array{ComplexF64}`: A projector from the full unitary operator on the system to any ancillary subspace
+"""
 QOCProblem(target, control_time, Pc, Pa) = QOCProblem(Pc, Int(round(tr(Pc))), Pa, Int(round(tr(Pa))), target, control_time)
 
+
+"""
+Instantiate a QOCParameters struct.
+"""
 struct QOCParameters{A,B,C,D,E}
     ODE_options::NamedTuple
     SE_reduce_map::A
@@ -238,12 +308,24 @@ struct QOCParameters{A,B,C,D,E}
     num_params_per_GOAT::E
 end
 
+"""
+    QOCParameters(ODE_options,SE_reduce_map, GOAT_reduce_map, optim_alg, optim_options; <keyword arguments> )
+
+Instantiate a QOCParameters struct with specified parameters. 
+
+# Arguments
+- `ODE_options::NamedTuple`: The settings that will be input to the ODE solver.
+- `SE_reduce_map::Function`: A function mapping the output from the Schrodinger equation to the objective value.
+- `GOAT_reduce_map::Function`: A function mapping the output from the GOAT E.O.M.s to the objective value and gradient.
+- `optim_alg::Optim Algorithm`: The specific optimization algorithm specified via Optim.jl
+- `optim_options::Optim options`: The optimization algorithm options specified via Optim.jl
+"""
 function QOCParameters(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim_options; num_params_per_GOAT=nothing)
     return QOCParameters{typeof(SE_reduce_map),typeof(GOAT_reduce_map),typeof(optim_alg),typeof(optim_options),typeof(num_params_per_GOAT)}(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim_options,num_params_per_GOAT)
 end
 
 
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
+function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -262,11 +344,11 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
 end
 
 """
-    SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
+    SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
 
 TBW
 """
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
+function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, linear_index::LinearIndices, tol::Float64)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     for j in 1:d
@@ -298,7 +380,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64},c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
+function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64},c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -320,7 +402,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
-function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64},c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, A::Diagonal, B::Diagonal)
+function SE_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64},c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}},c_func::Function, A::Diagonal, B::Diagonal)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -353,7 +435,7 @@ function SE_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64}
     lmul!(-im, du)
 end
 
-function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
+function GOAT_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -379,7 +461,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
     lmul!(-im, du)
 end
 
-function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, linear_index::LinearIndices, tol::Float64)
+function GOAT_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, linear_index::LinearIndices, tol::Float64)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     for j in 1:d
@@ -424,7 +506,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
     lmul!(-im, du)
 end
 
-function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64}, c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
+function GOAT_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64}, c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -460,7 +542,7 @@ function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float6
     lmul!(-im, du)
 end
 
-function GOAT_action(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64}, c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
+function GOAT_action!(du::Array{ComplexF64},u::Array{ComplexF64},p::Vector{Float64},t::Float64,d_ms::Vector{Int64},d_ls::Vector{Int64},d_vs::Vector{ComplexF64}, c_ms::Vector{Vector{Int64}},c_ls::Vector{Vector{Int64}},c_vs::Vector{Vector{ComplexF64}}, opt_param_inds::Vector{Int64}, c_func::Function, ∂c_func::Function, A::Diagonal, B::Diagonal)
     d = size(u,2) # Dimension of unitary/Hamiltonian
     lmul!(0.0,du)
     num_basis_ops = size(c_ms,1)
@@ -512,28 +594,28 @@ end
 function make_SE_update_function(sys::ControllableSystem)
     if sys.d_ls === nothing
         if sys.orthogonal_basis
-            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)),sys.tol)
+            return (du,u,p,t)-> SE_action!(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)),sys.tol)
         else
-            return (du,u,p,t)-> SE_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
+            return (du,u,p,t)-> SE_action!(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
         end
     elseif typeof(sys.reference_frame_generator) <: LinearAlgebra.Diagonal
-        return (du,u,p,t)-> SE_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, sys.reference_frame_generator, sys.reference_frame_storage)
+        return (du,u,p,t)-> SE_action!(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func, sys.reference_frame_generator, sys.reference_frame_storage)
     elseif sys.use_rotating_frame == false
-        return (du,u,p,t)-> SE_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
+        return (du,u,p,t)-> SE_action!(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, sys.coefficient_func)
     end
 end
 
 function make_GOAT_update_function(sys::ControllableSystem, opt_param_inds::Vector{Int})
     if sys.d_ls === nothing
         if sys.orthogonal_basis
-            return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)), sys.tol)
+            return (du,u,p,t)-> GOAT_action!(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, LinearIndices((1:sys.dim,1:sys.dim)), sys.tol)
         else
-            return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
+            return (du,u,p,t)-> GOAT_action!(du, u, p, t, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
         end
     elseif typeof(sys.reference_frame_generator) <: LinearAlgebra.Diagonal
-        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.reference_frame_generator, sys.reference_frame_storage)
+        return (du,u,p,t)-> GOAT_action!(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func, sys.reference_frame_generator, sys.reference_frame_storage)
     elseif sys.use_rotating_frame == false
-        return (du,u,p,t)-> GOAT_action(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
+        return (du,u,p,t)-> GOAT_action!(du, u, p, t, sys.d_ms, sys.d_ls, sys.d_vs, sys.c_ms, sys.c_ls, sys.c_vs, opt_param_inds, sys.coefficient_func, sys.∂coefficient_func)
     end
 end
 
