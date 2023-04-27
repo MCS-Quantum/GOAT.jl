@@ -31,7 +31,7 @@ using FFTW, Random, Printf
 
 Compute the sinusoidal amplitude-phase coefficients and frequencies from FFT of the signal s with timeseries ts. 
 
-Output: Amps, freqs, phases
+Outputs a triplet of: Amps, freqs, phases.
 """
 function get_sinusoidal_coefficients_from_FFT(ts, s)
     P = ts[end]
