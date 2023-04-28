@@ -27,7 +27,7 @@ using FFTW, Random, Printf
 
 
 """
-    get_sinusoidal_coefficients_from_FFT(ts, s)
+    get_sinusoidal_basis_parameters(ts, s)
 
 Compute the sinusoidal amplitude, frequencies, and phases of a signal.
 
@@ -37,7 +37,7 @@ Outputs a triplet of: Amps, freqs, phases via the decomposition: ``s(t) = ∑ᵢ
 - `ts`: the sampling times
 - `s`: the signal at each sampling time
 """
-function get_sinusoidal_coefficients_from_FFT(ts, s)
+function get_sinusoidal_basis_parameters(ts, s)
     dt = ts[2]-ts[1]
     fs = 1/dt
     N = size(ts,1)
@@ -48,22 +48,22 @@ function get_sinusoidal_coefficients_from_FFT(ts, s)
     ak[1] = ak[1]/2
     phi_k = atan.(bk./ak)
     Ak = ak ./ cos.(phi_k)
-    return Ak, freqs[1:size(Ak,1)]./2pi, -phi_k./2pi
+    return Ak, freqs[1:size(Ak,1)], -phi_k
 end
 
 
 """
     time_domain_signal(t::Float64, amps, freqs, phases, N)
 
-Compute a truncased inverse fourier transform at time `t`.
+Compute a truncatsed inverse fourier transform at time `t`.
 
-The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ sin(ωᵢt+ϕᵢ)``
+The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ cos(ωᵢt+ϕᵢ)``
 
 # Arguments
 - `t`: The time to evaluate the inverse FFT.
-- `Aks`: The amplitudes.
-- 'freqs`: The frequencies.
-- `phi_ks`: The phases.
+- `amps`: The amplitudes.
+- `freqs`: The frequencies.
+- `phases`: The phases.
 - `N`: The number of components to keep when reconstructing the signal.
 """
 function time_domain_signal(t::Float64, amps, freqs, phases, N)
@@ -78,7 +78,7 @@ end
 """
     time_domain_signal(t::Float64, amps, freqs, phases) 
 
-Compute a truncased inverse fourier transform at time `t`.
+Compute a truncated inverse fourier transform at time `t`.
 
 The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ sin(ωᵢt+ϕᵢ)``
 
@@ -91,28 +91,28 @@ The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ sin(�
 function time_domain_signal(t::Float64, amps, freqs, phases)
     c = 0.0
     for (a,f,p) in zip(amps, freqs, phases)
-        c += sin(t*2*pi*f+2*pi*p)*a
+        c += a*cos(t*f+p)
     end
     return c
 end
 
 
 """
-    colored_noise(lf, hf, n, α, seed)
+    colored_noise(lf, hf, n, alpha, seed)
 
 Generate a set of amplitude, frequencies, and phases for randomly generated colored noise. 
 
-Specifically, generates colored noise with a power P(ω) ∝ ωᵅ
+Specifically, generates colored noise with P(ω) ∝ ωᵅ
 
 # Arguments
 - `lf`: The low frequency cutoff. 
 - `hf`: The high frequency cutoff.
 - 'n`: The number of frequncy components.
-- `α`: The color of the noise.
+- `alpha`: The color of the noise.
 """
-function colored_noise(lf::Float64, hf::Float64, n::Int64, α::Float64, seed::Int64)
+function colored_noise(lf::Float64, hf::Float64, n::Int64, alpha::Float64, seed::Int64)
     freqs = collect(range(lf,hf,length=n))
-    amps = freqs.^α
+    amps = freqs.^alpha
     phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
     return amps, freqs, phases
 end 
@@ -125,7 +125,8 @@ end
 Uses a finite difference method to confirm that gradients are calculated correctly.
 
 If `only_coefficeint_funcs=true` then only the coefficient functions are checked.
-If `only_coefficeint_funcs=false` then the GOAT equations of motion are solved and unitary gradients are checked. 
+If `only_coefficeint_funcs=false` then the GOAT equations of motion 
+are solved and unitary gradients are checked too. 
 
 # Arguments
 - `sys`: The `ControllableSystem`.
@@ -133,6 +134,7 @@ If `only_coefficeint_funcs=false` then the GOAT equations of motion are solved a
 - 'params`: The `QOCParameters`
 - `dh=1e-8`: The finite-difference step size of each parameter.
 - `tol=1e-5`: The tolerance that determines whether an error is raised. 
+- `only_coefficeint_funcs=true`: Specifies if checking gradients of coefficients or unitaries. 
 """
 function test_derivatives(sys, prob, params, opt_param_inds, p_test; dh=1e-8, tol=1e-5, only_coefficeint_funcs=true)
     num_basis_funcs = size(sys.c_ls,1)
@@ -193,7 +195,7 @@ Morlet wavelet kernel (although not a true wavelet because it is not normalized)
 
 Effectively a gaussian-windowed sinusoid function. 
 """
-function 
+function morlet_kernel(t, a, mu, sigma, w, phi)
     return a*exp(-0.5*( (t-mu) / sigma)^2)*sin(w*t+phi)
 end
 
