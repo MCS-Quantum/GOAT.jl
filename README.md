@@ -8,6 +8,16 @@ This project is a [Julia](https://julialang.org/) implementation of the Gradient
 
 The implementation only currently supports optimizing unitary evolution. 
 
+## Installation
+
+```julia
+] add OrdinaryDiffEq # Optionally install DifferentialEquations.jl for more functionality, customization, and analysis
+] add Optim
+] add https://github.com/MCS-Quantum/GOAT.jl # Until I get the project registered
+## Optional - Useful for modeling various quantum systems
+] add QuantumOptics
+```
+
 ## Documentation
 
 Please see the documentation and examples for how to use and improve this software!
