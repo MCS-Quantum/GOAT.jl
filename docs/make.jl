@@ -10,7 +10,7 @@ makedocs(
         "Background" =>
             Any["Overview"=>"background/Overview.md", "background/Reference_frames.md"],
         "Package Core Structure" => Any[
-            "core/ControllableSystem.md",
+            "core/DataStructures.md",
             "core/QOCProblem.md",
             "core/Ansatz.md",
             "core/Methods.md",
