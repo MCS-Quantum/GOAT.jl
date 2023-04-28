@@ -55,7 +55,7 @@ end
 """
     time_domain_signal(t::Float64, amps, freqs, phases, N)
 
-Compute a truncatsed inverse fourier transform at time `t`.
+Compute a truncated inverse fourier transform at time `t`.
 
 The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ cos(ωᵢt+ϕᵢ)``
 

@@ -41,7 +41,7 @@ include("Ansatze.jl")
 export fourier_coefficient, ∂fourier_coefficient, ∂gaussian_coefficient, gaussian_coefficient, poly_coefficient, ∂poly_coefficient
 
 include("Utilities.jl")
-export get_sinusoidal_coefficients_from_FFT, time_domain_signal
+export get_sinusoidal_basis_parameters, time_domain_signal
 export window, S, general_logistic, dSdx, LO, gaussian_kernel, flat_top_cosine
 export sinusoid_kernel, morlet_kernel
 export colored_noise, test_derivatives
