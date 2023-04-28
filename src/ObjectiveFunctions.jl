@@ -30,8 +30,8 @@
 Computes the norm of the difference between `V` and `U`.
 """
 function g_abs(V, U)
-    @assert(size(V)==size(U),"Unitaries are different sizes")
-    return 1-(1/size(V,1))*real(abs(tr(adjoint(V)*U)))
+    @assert(size(V) == size(U), "Unitaries are different sizes")
+    return 1 - (1 / size(V, 1)) * real(abs(tr(adjoint(V) * U)))
 end
 
 """
@@ -40,7 +40,7 @@ end
 Computes the partial derivative of `g_abs` w.r.t `U` evaluated at `∂U`
 """
 function ∂g_abs(V, ∂U)
-    return (-1/size(V,1))*abs(tr(adjoint(V)*∂U))
+    return (-1 / size(V, 1)) * abs(tr(adjoint(V) * ∂U))
 end
 
 """
@@ -48,8 +48,8 @@ end
 
 Computes infidelity based on the real component of the overlap between `V` and `U`.
 """
-function g_real(V,U)
-    return 1-(1/size(V,1))*real(tr(adjoint(V)*U))
+function g_real(V, U)
+    return 1 - (1 / size(V, 1)) * real(tr(adjoint(V) * U))
 end
 
 """
@@ -57,8 +57,8 @@ end
 
 Computes the partial derivative of `g_real` w.r.t `U` evaluated at `∂U`.
 """
-function ∂g_real(V,∂U)
-    return (1/size(V,1))*real(tr(adjoint(V)*∂U))
+function ∂g_real(V, ∂U)
+    return (1 / size(V, 1)) * real(tr(adjoint(V) * ∂U))
 end
 
 
@@ -69,12 +69,12 @@ Computes infidelity via the squared modulus of the overlap between `V` and `U`.
 
 This definition is perhaps the most standard used for quantum optimal control of unitaries.
 """
-function g_sm(V, U; dim=0, args...)
-    if dim==0
-        dim = size(V,1)
+function g_sm(V, U; dim = 0, args...)
+    if dim == 0
+        dim = size(V, 1)
     end
-    @assert(size(V)==size(U),"Unitaries are different sizes")
-    return abs(1-(1/dim^2)*real(abs2(tr(adjoint(V)*U))))
+    @assert(size(V) == size(U), "Unitaries are different sizes")
+    return abs(1 - (1 / dim^2) * real(abs2(tr(adjoint(V) * U))))
 end
 
 """
@@ -82,11 +82,11 @@ end
 
 Computes the partial derivative of `g_sm` w.r.t `U` evaluated at `∂U`.
 """
-function ∂g_sm(V, U, ∂U; dim=0, args...)
-    if dim==0
-        dim = size(V,1)
+function ∂g_sm(V, U, ∂U; dim = 0, args...)
+    if dim == 0
+        dim = size(V, 1)
     end
-    return (-2/(dim^2))*real(tr(adjoint(V)*∂U)*tr(adjoint(U)*V))
+    return (-2 / (dim^2)) * real(tr(adjoint(V) * ∂U) * tr(adjoint(U) * V))
 end
 
 """
@@ -98,7 +98,7 @@ Computes the instantaneous population transferred from between two subspaces.
 """
 function L1(U, P1, P2)
     d1 = real(tr(P1))
-    return (1/d1)*real(tr(P2*U*P1*adjoint(U)))
+    return (1 / d1) * real(tr(P2 * U * P1 * adjoint(U)))
 end
 
 """
@@ -106,11 +106,11 @@ end
 
 Computes the total population transferred from between two subspaces during the control time. 
 """
-function h_sm(Us,Pc,Pd,ts)
+function h_sm(Us, Pc, Pd, ts)
     Tc = ts[end]
-    tp = (x) -> L1(x,Pc,Pd)
+    tp = (x) -> L1(x, Pc, Pd)
     ys = tp.(Us)
-    return (1/Tc)*integrate(ts,ys)
+    return (1 / Tc) * integrate(ts, ys)
 end
 
 """
@@ -118,10 +118,11 @@ end
 
 Computes the partial derivative of `h_sm` w.r.t. `U` evaluated at `∂U` 
 """
-function ∂h_sm(Us,∂Us,I1,I2,ts)
+function ∂h_sm(Us, ∂Us, I1, I2, ts)
     d1 = real(tr(I1))
     Tc = ts[end]
-    tp = (x,∂x) -> real(tr( I1*adjoint(∂x)*I2*x*I1 + I1*adjoint(x)*I2*∂x*I1))
-    ys = tp.(Us,∂Us)
-    return (1/Tc)*(1/d1)*integrate(ts,ys)
+    tp =
+        (x, ∂x) -> real(tr(I1 * adjoint(∂x) * I2 * x * I1 + I1 * adjoint(x) * I2 * ∂x * I1))
+    ys = tp.(Us, ∂Us)
+    return (1 / Tc) * (1 / d1) * integrate(ts, ys)
 end

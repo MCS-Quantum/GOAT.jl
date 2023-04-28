@@ -38,17 +38,17 @@ Outputs a triplet of: Amps, freqs, phases via the decomposition: ``s(t) = ∑ᵢ
 - `s`: the signal at each sampling time
 """
 function get_sinusoidal_basis_parameters(ts, s)
-    dt = ts[2]-ts[1]
-    fs = 1/dt
-    N = size(ts,1)
+    dt = ts[2] - ts[1]
+    fs = 1 / dt
+    N = size(ts, 1)
     Fs = fft(s)[1:N÷2]
-    freqs = 2*pi*fftfreq(length(s),fs)
-    ak = (2/N)*real.(Fs)
-    bk = (-2/N)*imag.(Fs)
-    ak[1] = ak[1]/2
-    phi_k = atan.(bk./ak)
+    freqs = 2 * pi * fftfreq(length(s), fs)
+    ak = (2 / N) * real.(Fs)
+    bk = (-2 / N) * imag.(Fs)
+    ak[1] = ak[1] / 2
+    phi_k = atan.(bk ./ ak)
     Ak = ak ./ cos.(phi_k)
-    return Ak, freqs[1:size(Ak,1)], -phi_k
+    return Ak, freqs[1:size(Ak, 1)], -phi_k
 end
 
 
@@ -68,9 +68,9 @@ The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ cos(�
 """
 function time_domain_signal(t::Float64, amps, freqs, phases, N)
     c = 0.0
-    I = sortperm(abs.(amps), rev=true)[1:N]
+    I = sortperm(abs.(amps), rev = true)[1:N]
     for i in I
-        c+= amps[i]*cos(freqs[i]*t+phases[i])
+        c += amps[i] * cos(freqs[i] * t + phases[i])
     end
     return c
 end
@@ -90,8 +90,8 @@ The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ sin(�
 """
 function time_domain_signal(t::Float64, amps, freqs, phases)
     c = 0.0
-    for (a,f,p) in zip(amps, freqs, phases)
-        c += a*cos(t*f+p)
+    for (a, f, p) in zip(amps, freqs, phases)
+        c += a * cos(t * f + p)
     end
     return c
 end
@@ -111,11 +111,11 @@ Specifically, generates colored noise with P(ω) ∝ ωᵅ
 - `alpha`: The color of the noise.
 """
 function colored_noise(lf::Float64, hf::Float64, n::Int64, alpha::Float64, seed::Int64)
-    freqs = collect(range(lf,hf,length=n))
-    amps = freqs.^alpha
-    phases = rand(MersenneTwister(seed), Float64, size(freqs,1))
+    freqs = collect(range(lf, hf, length = n))
+    amps = freqs .^ alpha
+    phases = rand(MersenneTwister(seed), Float64, size(freqs, 1))
     return amps, freqs, phases
-end 
+end
 
 
 
@@ -136,17 +136,26 @@ are solved and unitary gradients are checked too.
 - `tol=1e-5`: The tolerance that determines whether an error is raised. 
 - `only_coefficeint_funcs=true`: Specifies if checking gradients of coefficients or unitaries. 
 """
-function test_derivatives(sys, prob, params, opt_param_inds, p_test; dh=1e-8, tol=1e-5, only_coefficeint_funcs=true)
-    num_basis_funcs = size(sys.c_ls,1)
+function test_derivatives(
+    sys,
+    prob,
+    params,
+    opt_param_inds,
+    p_test;
+    dh = 1e-8,
+    tol = 1e-5,
+    only_coefficeint_funcs = true,
+)
+    num_basis_funcs = size(sys.c_ls, 1)
     p = similar(p_test)
     for j in opt_param_inds
-        for i in 1:num_basis_funcs
+        for i = 1:num_basis_funcs
             p .= p_test
-            c = sys.coefficient_func(p,1.0,i)
-            ∂c = sys.∂coefficient_func(p,1.0,i,j)
+            c = sys.coefficient_func(p, 1.0, i)
+            ∂c = sys.∂coefficient_func(p, 1.0, i, j)
             p[j] += dh
-            dc = sys.coefficient_func(p,1.0,i)
-            ∂c_FD = (dc-c)/dh
+            dc = sys.coefficient_func(p, 1.0, i)
+            ∂c_FD = (dc - c) / dh
             diff = abs(∂c_FD - ∂c)
             strdiff = @sprintf "%.5e" diff
             @assert diff <= tol "Error in the coefficient gradient of basis $i parameter $j: $strdiff"
@@ -154,10 +163,10 @@ function test_derivatives(sys, prob, params, opt_param_inds, p_test; dh=1e-8, to
             if only_coefficeint_funcs
                 continue
             end
-            g = evaluate_infidelity(p_test,sys,prob,params)
-            dg = evaluate_infidelity(p,sys,prob,params)
-            ∂g_FD = (dg-g)/dh
-            g,∂g = solve_GOAT_eoms_reduce(p_test,sys,prob,[j], params)
+            g = evaluate_infidelity(p_test, sys, prob, params)
+            dg = evaluate_infidelity(p, sys, prob, params)
+            ∂g_FD = (dg - g) / dh
+            g, ∂g = solve_GOAT_eoms_reduce(p_test, sys, prob, [j], params)
             diff = abs(∂g_FD - ∂g[1])
             strdiff = @sprintf "%.5e" diff
             @assert diff <= tol "Error in the unitary gradient of basis $i parameter $j: $strdiff"
@@ -175,7 +184,7 @@ end
 Computes the value of a sine function. 
 """
 function sinusoid_kernel(t, a, w, phi)
-    return a*sin(w*t+phi)
+    return a * sin(w * t + phi)
 end
 
 """
@@ -183,8 +192,8 @@ end
 
 Computes the value of a gaussian. 
 """
-function gaussian_kernel(t, a, mu,sigma)
-    return a*exp(-0.5*( (t-mu) / sigma)^2)
+function gaussian_kernel(t, a, mu, sigma)
+    return a * exp(-0.5 * ((t - mu) / sigma)^2)
 end
 
 
@@ -196,7 +205,7 @@ Morlet wavelet kernel (although not a true wavelet because it is not normalized)
 Effectively a gaussian-windowed sinusoid function. 
 """
 function morlet_kernel(t, a, mu, sigma, w, phi)
-    return a*exp(-0.5*( (t-mu) / sigma)^2)*sin(w*t+phi)
+    return a * exp(-0.5 * ((t - mu) / sigma)^2) * sin(w * t + phi)
 end
 
 """
@@ -213,12 +222,12 @@ https://en.wikipedia.org/wiki/Generalised_logistic_function.
 - `start = 1e3`: A shift of the logistic function to adjust `general_logistic(t=0)`.
 - `nu = 1.0`: A parameter to set where the maximum derivative is located. 
 """
-function general_logistic(t, lower, upper, slope, start=1e3, nu=1.0)
+function general_logistic(t, lower, upper, slope, start = 1e3, nu = 1.0)
     A = lower
     B = slope
     K = upper
     Q = start # The larger this is the smaller general_logistic(t=0)
-    return A + (K-A)/((1+Q*exp(-B*t))^(1/nu))
+    return A + (K - A) / ((1 + Q * exp(-B * t))^(1 / nu))
 end
 
 """
@@ -232,11 +241,11 @@ A flat-top cosine function kernel.
 - `tr`: The rise and fall time.
 """
 function flat_top_cosine(t, A, T, tr)
-    if t<=tr
-        e = 0.5*A*(1-cos(pi*t/tr))
+    if t <= tr
+        e = 0.5 * A * (1 - cos(pi * t / tr))
         return e
-    elseif t>=(T-tr)
-        e = 0.5*A*(1-cos(pi*(T-t)/tr))
+    elseif t >= (T - tr)
+        e = 0.5 * A * (1 - cos(pi * (T - t) / tr))
         return e
     else
         e = A
@@ -257,10 +266,10 @@ See `general_logistic` for additional details.
 - `right`: The location of the right tail.
 - `gradient`: The maximum gradient of the logistic functions
 """
-function window(x,lower,upper,gradient=20)
-    rising = general_logistic(x-lower,0,1,gradient)
-    lowering = general_logistic(-x+upper,0,1,gradient)
-    return lowering*rising
+function window(x, lower, upper, gradient = 20)
+    rising = general_logistic(x - lower, 0, 1, gradient)
+    lowering = general_logistic(-x + upper, 0, 1, gradient)
+    return lowering * rising
 end
 
 
@@ -269,10 +278,10 @@ end
 
 A saturation function that limits amplitudes to a particular range specified by [lower,upper].
 """
-function S(x, lower,upper ; gradient=1)
-    mid = (upper-lower)*0.5
-    Q = -upper/lower
-    return general_logistic(x/mid,lower,upper,gradient,Q)
+function S(x, lower, upper; gradient = 1)
+    mid = (upper - lower) * 0.5
+    Q = -upper / lower
+    return general_logistic(x / mid, lower, upper, gradient, Q)
 end
 
 
@@ -281,14 +290,17 @@ end
 
 Calculates the partial derivative of the saturation function w.r.t the independent variable x.
 """
-function dSdx(x, lower, upper ; gradient=1)
-    mid = (upper-lower)*0.5
-    Q = -upper/lower
+function dSdx(x, lower, upper; gradient = 1)
+    mid = (upper - lower) * 0.5
+    Q = -upper / lower
     b = upper
     a = lower
     g = gradient
-    xbar = x/mid
-    return -( (b-a)/ ( (1+Q*exp(-2*g*x/(b-a)))^2 ))*Q*(exp(-2*g*x/(b-a)))*(-2*g/(b-a))
+    xbar = x / mid
+    return -((b - a) / ((1 + Q * exp(-2 * g * x / (b - a)))^2)) *
+           Q *
+           (exp(-2 * g * x / (b - a))) *
+           (-2 * g / (b - a))
 end
 
 """
@@ -296,6 +308,6 @@ end
 
 Simulates a local oscillator with frequency `w`.
 """
-function LO(t,w)
-    return cos(w*t)
+function LO(t, w)
+    return cos(w * t)
 end

@@ -34,12 +34,12 @@ Compute the time dependent coefficient for a control basis operator given by a F
 - `i`: The index of the control basis operator.
 - `N`: The total number of basis functions used to define the coefficient function. 
 """
-function fourier_coefficient(p,t,i,N::Int64)
+function fourier_coefficient(p, t, i, N::Int64)
     c = 0.0
     K = 3
-    for n in 1:N
-        j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-        c += p[j+1]*cos(p[j+2]*t+p[j+3])
+    for n = 1:N
+        j = (i - 1) * K * N + (n - 1) * K # Get the linear index of the ith's control term's nth basis function
+        c += p[j+1] * cos(p[j+2] * t + p[j+3])
     end
     return c
 end
@@ -57,20 +57,20 @@ Computes the partial derivative of `fourier_coefficient` w.r.t p[l] evaluated at
 - `l`: The index of the `p` with which to compute the partial derivative to. 
 - `N`: The total number of basis functions used to define the coefficient function. 
 """
-function ∂fourier_coefficient(p,t,i,l,N::Int64)
+function ∂fourier_coefficient(p, t, i, l, N::Int64)
     K = 3
-    jmin = (i-1)*K*N+1
-    jmax = i*K*N
+    jmin = (i - 1) * K * N + 1
+    jmax = i * K * N
     if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms
         c = 0.0
-        for n in 1:N
-            j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-            if j+1 == l
-                c += cos(p[j+2]*t+p[j+3])
-            elseif j+2 == l
-                c += -t*p[j+1]*sin(p[j+2]*t+p[j+3])
-            elseif j+3 == l
-                c += -p[j+1]*sin(p[j+2]*t+p[j+3])
+        for n = 1:N
+            j = (i - 1) * K * N + (n - 1) * K # Get the linear index of the ith's control term's nth basis function
+            if j + 1 == l
+                c += cos(p[j+2] * t + p[j+3])
+            elseif j + 2 == l
+                c += -t * p[j+1] * sin(p[j+2] * t + p[j+3])
+            elseif j + 3 == l
+                c += -p[j+1] * sin(p[j+2] * t + p[j+3])
             end
         end
         return c
@@ -89,12 +89,12 @@ Compute the time dependent coefficient for a control basis operator given by a g
 - `i`: The index of the control basis operator.
 - `N`: The total number of basis functions used to define the coefficient function. 
 """
-function gaussian_coefficient(p,t,i,N::Int64)
+function gaussian_coefficient(p, t, i, N::Int64)
     c = 0.0
     K = 3
-    for n in 1:N
-        j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-        c += p[j+1]*exp(-0.5*( (t-p[j+2]) / p[j+3])^2)
+    for n = 1:N
+        j = (i - 1) * K * N + (n - 1) * K # Get the linear index of the ith's control term's nth basis function
+        c += p[j+1] * exp(-0.5 * ((t - p[j+2]) / p[j+3])^2)
     end
     return c
 end
@@ -112,20 +112,24 @@ Computes the partial derivative of `fourier_coefficient` w.r.t p[l] evaluated at
 - `l`: The index of the `p` with which to compute the partial derivative to. 
 - `N`: The total number of basis functions used to define the coefficient function. 
 """
-function ∂gaussian_coefficient(p,t,i,l,N::Int64)
+function ∂gaussian_coefficient(p, t, i, l, N::Int64)
     K = 3
-    jmin = (i-1)*K*N+1
-    jmax = i*K*N
+    jmin = (i - 1) * K * N + 1
+    jmax = i * K * N
     if l >= jmin && l <= jmax # Linear indices between the ith control term and the i+1th control terms
         c = 0.0
-        for n in 1:N
-            j = (i-1)*K*N + (n-1)*K # Get the linear index of the ith's control term's nth basis function
-            if j+1 == l
-                c += exp(-0.5*( (t-p[j+2]) / p[j+3])^2)
-            elseif j+2 == l
-                c += p[j+1]*(t-p[j+2])*exp(-0.5*( (t-p[j+2]) / p[j+3])^2) /(p[j+3]^2)
-            elseif j+3 == l
-                c += p[j+1]*((t-p[j+2])^2)*exp(-0.5*( (t-p[j+2]) / p[j+3])^2)/(p[j+3]^3)
+        for n = 1:N
+            j = (i - 1) * K * N + (n - 1) * K # Get the linear index of the ith's control term's nth basis function
+            if j + 1 == l
+                c += exp(-0.5 * ((t - p[j+2]) / p[j+3])^2)
+            elseif j + 2 == l
+                c +=
+                    p[j+1] * (t - p[j+2]) * exp(-0.5 * ((t - p[j+2]) / p[j+3])^2) /
+                    (p[j+3]^2)
+            elseif j + 3 == l
+                c +=
+                    p[j+1] * ((t - p[j+2])^2) * exp(-0.5 * ((t - p[j+2]) / p[j+3])^2) /
+                    (p[j+3]^3)
             end
         end
         return c
@@ -145,14 +149,14 @@ Compute the time dependent coefficient for a control basis operator given by a p
 - `i`: The index of the control basis operator.
 - `N`: The total number of basis functions used to define the coefficient function. 
 """
-function poly_coefficient(p,t,i,N::Int64)
-    M = 2*N-1 # Number of parameters for each control term
-    j0 = (i-1)*M+1
-    jstop = i*M
+function poly_coefficient(p, t, i, N::Int64)
+    M = 2 * N - 1 # Number of parameters for each control term
+    j0 = (i - 1) * M + 1
+    jstop = i * M
     c = p[j0]
-    jstart = j0+1
-    for (n,j) in enumerate(jstart:2:jstop)
-        c += p[j]*(t-p[j+1])^(n)
+    jstart = j0 + 1
+    for (n, j) in enumerate(jstart:2:jstop)
+        c += p[j] * (t - p[j+1])^(n)
     end
     return c
 end
@@ -170,21 +174,21 @@ Computes the partial derivative of `fourier_coefficient` w.r.t p[l] evaluated at
 - `l`: The index of the `p` with which to compute the partial derivative to. 
 - `N`: The total number of basis functions used to define the coefficient function. 
 """
-function ∂poly_coefficient(p,t,i,l,N::Int64)
-    M = 2*N-1 # Number of parameters for each control term
-    j0 = (i-1)*M+1
-    jstop = i*M
+function ∂poly_coefficient(p, t, i, l, N::Int64)
+    M = 2 * N - 1 # Number of parameters for each control term
+    j0 = (i - 1) * M + 1
+    jstop = i * M
     jrange = j0:jstop
     c = 0.0
-    if l==j0
+    if l == j0
         c += 1.0
     elseif l in jrange
-        jstart = j0+1
-        for (n,j) in enumerate(jstart:2:jstop)
+        jstart = j0 + 1
+        for (n, j) in enumerate(jstart:2:jstop)
             if j == l
-                c+= (t-p[j+1])^(n)
-            elseif j+1 == l
-                c+= -p[j]*(n)*(t-p[j+1])^(n)
+                c += (t - p[j+1])^(n)
+            elseif j + 1 == l
+                c += -p[j] * (n) * (t - p[j+1])^(n)
             end
         end
     end
