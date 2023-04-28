@@ -1,3 +1,3 @@
-# Details on the ControllableSystem Struct
+# Details on the primary data structures
 
 something

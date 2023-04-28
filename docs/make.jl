@@ -7,13 +7,12 @@ makedocs(
     modules = [GOAT],
     pages = [
         "Home" => "index.md",
-        "Background" =>
-            Any["Overview"=>"background/Overview.md", "background/Reference_frames.md"],
-        "Package Core Structure" => Any[
+        "Background" => "background/Overview.md",
+        "Structure" => Any[
             "core/DataStructures.md",
-            "core/QOCProblem.md",
             "core/Ansatz.md",
             "core/Methods.md",
+            "core/ReferenceFrames.md",
         ],
         "Examples" => Any[
             "Single qubit control"=>"examples/example1.md",

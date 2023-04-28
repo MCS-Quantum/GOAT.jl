@@ -1,3 +1,0 @@
-# QOCProblem struct info
-
-something

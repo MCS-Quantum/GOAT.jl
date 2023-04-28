@@ -20,7 +20,7 @@ The implementation only currently supports optimizing unitary evolution.
 
 ## Documentation
 
-Please see the documentation and examples for how to use and improve this software!
+[Please see the documentation and examples](https://mcs-quantum.github.io/GOAT.jl/stable/) for how to use and improve this software!
 
 ## Citation
 
