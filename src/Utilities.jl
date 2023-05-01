@@ -85,7 +85,7 @@ The signal ``s(t)`` is reconstructed via the function ``s(t) = ∑ᵢ aᵢ sin(�
 # Arguments
 - `t`: The time to evaluate the inverse FFT.
 - `Aks`: The amplitudes.
-- 'freqs`: The frequencies.
+- `freqs`: The frequencies.
 - `phi_ks`: The phases.
 """
 function time_domain_signal(t::Float64, amps, freqs, phases)
@@ -107,7 +107,7 @@ Specifically, generates colored noise with P(ω) ∝ ωᵅ
 # Arguments
 - `lf`: The low frequency cutoff. 
 - `hf`: The high frequency cutoff.
-- 'n`: The number of frequncy components.
+- `n`: The number of frequncy components.
 - `alpha`: The color of the noise.
 """
 function colored_noise(lf::Float64, hf::Float64, n::Int64, alpha::Float64, seed::Int64)
@@ -131,7 +131,7 @@ are solved and unitary gradients are checked too.
 # Arguments
 - `sys`: The `ControllableSystem`.
 - `prob`: The `QOCProblem`.
-- 'params`: The `QOCParameters`
+- `params`: The `QOCParameters`.
 - `dh=1e-8`: The finite-difference step size of each parameter.
 - `tol=1e-5`: The tolerance that determines whether an error is raised. 
 - `only_coefficeint_funcs=true`: Specifies if checking gradients of coefficients or unitaries. 

@@ -1,3 +1,3 @@
-# Details on the primary data structures
+# Core data structures
 
 something

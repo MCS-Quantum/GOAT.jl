@@ -16,13 +16,7 @@ U(\vec{\alpha},t) = \mathcal{T}\exp \bigg[ \int_0^t d\tau H(\vec{\alpha},\tau) \
 
 The task of optimal control is to determine a set of control parameters $\vec{\alpha}^*$ and a control time $T^*$ such that the system's evolution $U(\vec{\alpha}^*, T^*)$ approximates a desired unitary evolution $U_{target}$. 
 
-The GOAT algorithm assumes that the each control function is described as a combination of a set of parametrized basis functions. This is a rather general definition and many choices for this decomposition can be made. Referred to as an *ansatz*, the choice of decomposition is typically informed by experimental considerations. One example is the expansion of each control function within an orthogonal function basis (like a polynomial basis or Fourier basis):
-
-```math
-c_i(\vec{\alpha},t) = \sum_n^N \alpha_n f_n(t).
-```
-
-While this optimization can be performed using gradient-free methods, optimization algorithms that utilize information about the gradient of the objective function w.r.t. the control parameters can yield much faster optimization. 
+While this optimization can be performed using gradient-free methods, algorithms that utilize information about the gradient of the objective function w.r.t. the control parameters can yield much faster optimization. 
 
 In order to utilize gradient-based optimization routines it is required that we compute the partial derivative of the unitary evolution with respect to a particular parameter $\alpha_n$: $\partial_{\alpha_n} U({\vec{\alpha},T})$. This can then be used (via the chain rule) to compute gradients of the objective function. 
 
