@@ -19,6 +19,7 @@ makedocs(
             "Working with QuantumOptics.jl"=>"examples/example2.md",
         ],
         "Recommendations" => "recommendations.md",
+        "API Reference" => "API_reference.md",
     ],
 )
 
