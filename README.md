@@ -12,7 +12,7 @@ The implementation only currently supports optimizing unitary evolution.
 
 ```julia
 ] add OrdinaryDiffEq # Optionally install DifferentialEquations.jl for more functionality, customization, and analysis
-] add Optim
+] add Optim, LineSearches
 ] add https://github.com/MCS-Quantum/GOAT.jl # Until I get the project registered
 ## Optional - Useful for modeling various quantum systems
 ] add QuantumOptics
