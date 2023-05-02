@@ -9,8 +9,8 @@ makedocs(
         "Home" => "index.md",
         "Background" => "background/Overview.md",
         "Structure" => Any[
-            "core/DataStructures.md",
             "core/Ansatz.md",
+            "core/DataStructures.md",
             "core/Methods.md",
             "core/ReferenceFrames.md",
         ],
