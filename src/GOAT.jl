@@ -1033,10 +1033,10 @@ end
 Integrate the Schrodinger equation for a specified time and control parameter set. 
 
 # Arguments
-    - `sys::ControllableSystem`: The controllable system.
-    - `Tmax::Float64`: The total contorl time.
-    - `p::Vector{Float64}`: The parameters which define the controlled evolution.
-    - `ODE_options`: The specification of the integrator settings from OrdinaryDiffEq.jl
+- `sys::ControllableSystem`: The controllable system.
+- `Tmax::Float64`: The total contorl time.
+- `p::Vector{Float64}`: The parameters which define the controlled evolution.
+- `ODE_options`: The specification of the integrator settings from OrdinaryDiffEq.jl
 """
 function solve_SE(
     sys::ControllableSystem,
@@ -1059,11 +1059,11 @@ end
 Integrate the Schrodinger equation for a specified time and control parameter set. 
 
 # Arguments
-    - `sys::ControllableSystem`: The controllable system.
-    - `opt_param_inds::Vector{Int64}`: The vector of parameter indices specifying which gradients will be propogated.
-    - `Tmax::Float64`: The total contorl time.
-    - `p::Vector{Float64}`: The parameters which define the controlled evolution.
-    - `ODE_options`: The specification of the integrator settings from OrdinaryDiffEq.jl
+- `sys::ControllableSystem`: The controllable system.
+- `opt_param_inds::Vector{Int64}`: The vector of parameter indices specifying which gradients will be propogated.
+- `Tmax::Float64`: The total contorl time.
+- `p::Vector{Float64}`: The parameters which define the controlled evolution.
+- `ODE_options`: The specification of the integrator settings from OrdinaryDiffEq.jl
 """
 function solve_GOAT_eoms(
     sys::ControllableSystem,
@@ -1088,9 +1088,9 @@ end
 Maps the GOAT ODE solution to the objective function and gradient vector using an infidelity measure.
 
 # Arguments
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The QOCProblem
-    - `goat_sol::OrdinaryDiffEq.solution`: The solution to the GOAT equations of motion.
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The QOCProblem
+- `goat_sol::OrdinaryDiffEq.solution`: The solution to the GOAT equations of motion.
 """
 function GOAT_infidelity_reduce_map(sys::ControllableSystem, prob::QOCProblem, goat_sol)
     d = sys.dim
@@ -1117,9 +1117,9 @@ end
 Maps Schrodinger ODE solution to the objective function using an infidelity measure.
 
 # Arguments
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The QOCProblem
-    - `SE_sol::OrdinaryDiffEq.solution`: The solution to the Schrodinger equation.
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The QOCProblem
+- `SE_sol::OrdinaryDiffEq.solution`: The solution to the Schrodinger equation.
 """
 function SE_infidelity_reduce_map(sys::ControllableSystem, prob::QOCProblem, SE_sol)
     d = sys.dim
@@ -1137,10 +1137,10 @@ end
 Solves the GOAT eoms and outputs a objective function and gradient vector.
 
 # Arguments
-    - `p`: The control parameter vector at which the objective and gradient is being calculated. 
-    - `sys::ControllableSystem`: The controllable system.
-    - `opt_param_inds`: The vector of parameter indices which determines which gradients are calculated.
-    - `param::QOCParameters`: The QOCParameters which provides the ODE_options.
+- `p`: The control parameter vector at which the objective and gradient is being calculated. 
+- `sys::ControllableSystem`: The controllable system.
+- `opt_param_inds`: The vector of parameter indices which determines which gradients are calculated.
+- `param::QOCParameters`: The QOCParameters which provides the ODE_options.
 """
 function solve_GOAT_eoms_reduce(
     p,
@@ -1163,12 +1163,12 @@ end
 Parallelized computation of the objective and gradient for QOC with GOAT.
 
 # Arguments
-    - `F`: The objective value
-    - `G`: The vector of gradients w.r.t. the control parameters `p`. 
-    - `p`: The control parameter vector.
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The QOCProblem
-    - `param::QOCParameters`: The QOCParameters.
+- `F`: The objective value
+- `G`: The vector of gradients w.r.t. the control parameters `p`. 
+- `p`: The control parameter vector.
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The QOCProblem
+- `param::QOCParameters`: The QOCParameters.
 """
 function parallel_GOAT_fg!(
     F,
@@ -1214,14 +1214,14 @@ end
 Parallelized computation of the objective and gradient for QOC with GOAT.
 
 # Arguments
-    - `F`: The objective value
-    - `G`: The vector of gradients w.r.t. the control parameters `p`. 
-    - `p`: The control parameter vector.
-    - `p_storage`: A pre-allocated storage vector for current `p` values. 
-    - `opt_param_inds`: The vector of parameter indices which determines which gradients are calculated.
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The QOCProblem
-    - `param::QOCParameters`: The QOCParameters.
+- `F`: The objective value
+- `G`: The vector of gradients w.r.t. the control parameters `p`. 
+- `p`: The control parameter vector.
+- `p_storage`: A pre-allocated storage vector for current `p` values. 
+- `opt_param_inds`: The vector of parameter indices which determines which gradients are calculated.
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The QOCProblem
+- `param::QOCParameters`: The QOCParameters.
 """
 function parallel_GOAT_fg!(
     F,
@@ -1272,10 +1272,10 @@ end
 Run the GOAT algorithm and find optimal controls.
 
 # Arguments:
-    - `p0`: The initial guess of the optimal control parameters.
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The quantum optimal control problem.
-    - `param::QOCParameters`: The quantum optimal control parameters.
+- `p0`: The initial guess of the optimal control parameters.
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The quantum optimal control problem.
+- `param::QOCParameters`: The quantum optimal control parameters.
 """
 function find_optimal_controls(
     p0,
@@ -1294,11 +1294,11 @@ end
 Run the GOAT algorithm and find optimal controls.
 
 # Arguments:
-    - `p0`: The initial guess of the optimal control parameters.
-    - `opt_param_inds`: Indices of p0 which specify which parameters to hold constant and which to optimize.
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The quantum optimal control problem.
-    - `param::QOCParameters`: The quantum optimal control parameters.
+- `p0`: The initial guess of the optimal control parameters.
+- `opt_param_inds`: Indices of p0 which specify which parameters to hold constant and which to optimize.
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The quantum optimal control problem.
+- `param::QOCParameters`: The quantum optimal control parameters.
 """
 function find_optimal_controls(
     p0,
@@ -1320,10 +1320,10 @@ end
 Evaluate the objective function at p.
 
 # Arguments:
-    - `p`: The optimal control parameters at which to evalute the objective. 
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The quantum optimal control problem.
-    - `param::QOCParameters`: The quantum optimal control parameters.
+- `p`: The optimal control parameters at which to evalute the objective. 
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The quantum optimal control problem.
+- `param::QOCParameters`: The quantum optimal control parameters.
 """
 function evaluate_objective(
     p::Vector{Float64},
@@ -1343,10 +1343,10 @@ end
 Parallelized evaluation the objective function at multiple control parameters.
 
 # Arguments:
-    - `ps::Vector{Vector{Float64}}`: The optimal control parameters at which to evalute the objective. 
-    - `sys::ControllableSystem`: The controllable system.
-    - `prob::QOCProblem`: The quantum optimal control problem.
-    - `param::QOCParameters`: The quantum optimal control parameters.
+- `ps::Vector{Vector{Float64}}`: The optimal control parameters at which to evalute the objective. 
+- `sys::ControllableSystem`: The controllable system.
+- `prob::QOCProblem`: The quantum optimal control problem.
+- `param::QOCParameters`: The quantum optimal control parameters.
 """
 function evaluate_objective(
     ps::Vector{Vector{Float64}},
