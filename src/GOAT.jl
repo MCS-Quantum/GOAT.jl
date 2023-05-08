@@ -436,7 +436,7 @@ struct QOCParameters{A,B,C,D,E}
     GOAT_reduce_map::B
     optim_alg::C
     optim_options::D
-    num_params_per_GOAT::E
+    derivs_per_core::E
 end
 
 """
@@ -457,21 +457,21 @@ function QOCParameters(
     GOAT_reduce_map,
     optim_alg,
     optim_options;
-    num_params_per_GOAT = nothing,
+    derivs_per_core = nothing,
 )
     return QOCParameters{
         typeof(SE_reduce_map),
         typeof(GOAT_reduce_map),
         typeof(optim_alg),
         typeof(optim_options),
-        typeof(num_params_per_GOAT),
+        typeof(derivs_per_core),
     }(
         ODE_options,
         SE_reduce_map,
         GOAT_reduce_map,
         optim_alg,
         optim_options,
-        num_params_per_GOAT,
+        derivs_per_core,
     )
 end
 
@@ -1181,13 +1181,13 @@ function parallel_GOAT_fg!(
     T = prob.control_time
     if G !== nothing
         num_params = size(p, 1)
-        if params.num_params_per_GOAT === nothing
-            num_params_per_GOAT = num_params
+        if params.derivs_per_core === nothing
+            derivs_per_core = num_params
         else
-            num_params_per_GOAT = params.num_params_per_GOAT
+            derivs_per_core = params.derivs_per_core
         end
         goat_param_indices =
-            collect.(collect(Iterators.partition(1:num_params, num_params_per_GOAT)))
+            collect.(collect(Iterators.partition(1:num_params, derivs_per_core)))
         f = y -> solve_GOAT_eoms_reduce(p, sys, prob, y, params)
         out = pmap(f, goat_param_indices)
         gs = first.(out)
@@ -1237,20 +1237,20 @@ function parallel_GOAT_fg!(
     p_storage[opt_param_inds] .= p # Update the storage vector with new parameters from optimization
     if G !== nothing
         num_params = size(p, 1)
-        if params.num_params_per_GOAT === nothing
-            num_params_per_GOAT = num_params
+        if params.derivs_per_core === nothing
+            derivs_per_core = num_params
         else
-            num_params_per_GOAT = params.num_params_per_GOAT
+            derivs_per_core = params.derivs_per_core
         end
         goat_param_indices =
-            collect.(collect(Iterators.partition(opt_param_inds, num_params_per_GOAT)))
+            collect.(collect(Iterators.partition(opt_param_inds, derivs_per_core)))
         f = y -> solve_GOAT_eoms_reduce(p_storage, sys, prob, y, params)
         out = pmap(f, goat_param_indices)
         gs = first.(out)
         # @assert gs[1] ≈ gs[end] # Trivial sanity check
         for i = 1:size(goat_param_indices, 1)
-            start = num_params_per_GOAT * (i - 1) + 1
-            stop = num_params_per_GOAT * i
+            start = derivs_per_core * (i - 1) + 1
+            stop = derivs_per_core * i
             ∂gs = last(out[i])
             G[start:stop] .= ∂gs
         end

@@ -63,10 +63,10 @@ struct QOCParameters
     GOAT_reduce_map
     optim_alg
     optim_options
-    num_params_per_GOAT
+    derivs_per_core
 end
 ```
 
-`ODE_options` is a `NamedTuple` specifying the solver options for [OrdinaryDiffEq.jl](https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/), `SE_reduce_map` and `GOAT_reduce_map` are functions that take the output unitaries from solving the differential equations and map to the objective functions and gradients, `optim_alg` and `optim_options` are the options for [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/#user/config/), and `num_params_per_GOAT` specifies how many gradients are propogated per CPU (effectively defining the parallelization of the QOC problem). 
+`ODE_options` is a `NamedTuple` specifying the solver options for [OrdinaryDiffEq.jl](https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/), `SE_reduce_map` and `GOAT_reduce_map` are functions that take the output unitaries from solving the differential equations and map to the objective functions and gradients, `optim_alg` and `optim_options` are the options for [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/#user/config/), and `derivs_per_core` specifies how many parameter derivatives are propogated per CPU core (effectively defining the parallelization of the QOC problem). 
 
 Any user is strongly encouraged to view the examples for a detailed description of how to specify each of these parameters. 

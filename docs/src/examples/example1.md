@@ -113,17 +113,17 @@ Here we will define our initial guess and specify which parameters are to be opt
 ```@example ex1
 p0 = [0.5,T/2,T/8] # The initial parameter guesses
 opt_param_inds = [1] # The parameters of the vector p0 to optimize (just the amplitude parameter -- p0[1] -- in this case)
-num_params_per_GOAT = 1 
+derivs_per_core = 1 
 ```
 
-This `num_params_per_GOAT` variable specifies how many derivatives are propogated in each GOAT EOMs and informs parallelization. 
+This `derivs_per_core` variable specifies how many derivatives are propogated in each GOAT EOMs and informs parallelization. 
 
-For example, if `num_params_per_GOAT=5`and there are 5 total parameters, then no parallelization is performed. In contrast, if `num_params_per_GOAT=2` and the  re are 5 total parameters, then 3 processes are run in parallel: the first processor computes the EOMs for 2 parameters, the second process computes the EOMs for 2 parameters, and the third computes the EOMs for 1 parameter. 
+For example, if `derivs_per_core=5`and there are 5 total parameters, then no parallelization is performed. In contrast, if `derivs_per_core=2` and there are 5 total parameters, then 3 processes are run in parallel: the first processor computes the EOMs for 2 parameters, the second process computes the EOMs for 2 parameters, and the third computes the EOMs for 1 parameter. 
 
 Next we put all of these parameters into a `QOCParameters` struct:
 
 ```@example ex1
-params = QOCParameters(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim_options; num_params_per_GOAT=num_params_per_GOAT)
+params = QOCParameters(ODE_options,SE_reduce_map,GOAT_reduce_map,optim_alg,optim_options; derivs_per_core=derivs_per_core)
 ```
 
 Finally we run our optimization
